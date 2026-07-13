@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(DESIGNER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Brand {
+  id        String      @id @default(cuid())
+  name      String
+  email     String      @unique
+  phone     String
+  password  String
+  status    BrandStatus @default(ACTIVE)
+  quotes    Quote[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("brands")
+}
+
+model Quote {
+  id          String      @id @default(cuid())
+  brand       Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId     String
+  projectName String
+  status      QuoteStatus @default(SUBMITTED)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("quotes")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String
+  performedBy String
+  details     String?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+enum Role {
+  ADMIN
+  DESIGNER
+}
+
+enum BrandStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum QuoteStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ACTIVE
+}
