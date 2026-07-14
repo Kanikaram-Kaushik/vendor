@@ -30,7 +30,11 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/admin/overview')
+      if (data.redirect) {
+        router.push(data.redirect)
+      } else {
+        router.push('/admin/overview')
+      }
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)
@@ -50,7 +54,7 @@ export default function LoginPage() {
         </div>
 
         <h1 className="login-title">Welcome back</h1>
-        <p className="login-subtitle">Sign in to your admin account</p>
+        <p className="login-subtitle">Sign in to your account</p>
 
         {error && <div className="login-error">{error}</div>}
 
@@ -61,7 +65,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               className="form-input"
-              placeholder="admin@designbhk.com"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -94,7 +98,7 @@ export default function LoginPage() {
         </form>
 
         <p style={{ marginTop: 20, fontSize: 12, color: '#999', textAlign: 'center' }}>
-          Admin access only. Contact your administrator for credentials.
+          Portal access for Admins, Designers & Vendors.
         </p>
       </div>
     </div>
