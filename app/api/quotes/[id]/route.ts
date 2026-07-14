@@ -12,14 +12,15 @@ async function getAdmin(request: NextRequest) {
 // PATCH /api/quotes/[id]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const admin = await getAdmin(request)
     const { status, projectName } = await request.json()
 
     const quote = await prisma.quote.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(status && { status }),
         ...(projectName && { projectName }),
@@ -45,12 +46,13 @@ export async function PATCH(
 // DELETE /api/quotes/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const admin = await getAdmin(request)
     const quote = await prisma.quote.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { brand: { select: { name: true } } },
     })
 
@@ -58,12 +60,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
     }
 
-    await prisma.quote.delete({ where: { id: params.id } })
+    await prisma.quote.delete({ where: { id } })
 
     await createAuditLog({
       action: 'QUOTE_DELETED',
       entityType: 'quote',
-      entityId: params.id,
+      entityId: id,
       performedBy: admin?.name || 'System',
       details: `Deleted quote: ${quote.projectName} for ${quote.brand.name}`,
     })

@@ -12,14 +12,15 @@ async function getAdmin(request: NextRequest) {
 // PATCH /api/users/[id]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const admin = await getAdmin(request)
     const { name, email, role } = await request.json()
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { ...(name && { name }), ...(email && { email }), ...(role && { role }) },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     })
@@ -42,22 +43,23 @@ export async function PATCH(
 // DELETE /api/users/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const admin = await getAdmin(request)
-    const user = await prisma.user.findUnique({ where: { id: params.id } })
+    const user = await prisma.user.findUnique({ where: { id } })
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    await prisma.user.delete({ where: { id: params.id } })
+    await prisma.user.delete({ where: { id } })
 
     await createAuditLog({
       action: 'USER_DELETED',
       entityType: 'user',
-      entityId: params.id,
+      entityId: id,
       performedBy: admin?.name || 'System',
       details: `Deleted user: ${user.name} (${user.email})`,
     })

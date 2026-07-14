@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes
-  if (pathname === '/login' || pathname === '/') {
+  if (pathname === '/login' || pathname === '/designer/login' || pathname === '/vendor/login' || pathname === '/') {
     return NextResponse.next()
   }
 
@@ -34,9 +34,57 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Protect /designer routes
+  if (pathname.startsWith('/designer')) {
+    const token = request.cookies.get('designer-token')?.value
+
+    if (!token) {
+      return NextResponse.redirect(new URL('/designer/login', request.url))
+    }
+
+    const payload = await verifyToken(token)
+
+    if (!payload) {
+      const response = NextResponse.redirect(new URL('/designer/login', request.url))
+      response.cookies.delete('designer-token')
+      return response
+    }
+
+    // Only DESIGNERs can access designer routes
+    if (payload.role !== 'DESIGNER') {
+      return NextResponse.redirect(new URL('/designer/login', request.url))
+    }
+
+    return NextResponse.next()
+  }
+
+  // Protect /vendor routes
+  if (pathname.startsWith('/vendor')) {
+    const token = request.cookies.get('vendor-token')?.value
+
+    if (!token) {
+      return NextResponse.redirect(new URL('/vendor/login', request.url))
+    }
+
+    const payload = await verifyToken(token)
+
+    if (!payload) {
+      const response = NextResponse.redirect(new URL('/vendor/login', request.url))
+      response.cookies.delete('vendor-token')
+      return response
+    }
+
+    // Only VENDORs can access vendor routes
+    if (payload.role !== 'VENDOR') {
+      return NextResponse.redirect(new URL('/vendor/login', request.url))
+    }
+
+    return NextResponse.next()
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: ['/admin/:path*', '/designer/:path*', '/vendor/:path*', '/login', '/designer/login', '/vendor/login'],
 }

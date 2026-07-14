@@ -12,14 +12,15 @@ async function getAdmin(request: NextRequest) {
 // PATCH /api/brands/[id]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const admin = await getAdmin(request)
     const body = await request.json()
 
     const brand = await prisma.brand.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(body.name && { name: body.name }),
         ...(body.email && { email: body.email }),
@@ -47,22 +48,23 @@ export async function PATCH(
 // DELETE /api/brands/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const admin = await getAdmin(request)
-    const brand = await prisma.brand.findUnique({ where: { id: params.id } })
+    const brand = await prisma.brand.findUnique({ where: { id } })
 
     if (!brand) {
       return NextResponse.json({ error: 'Brand not found' }, { status: 404 })
     }
 
-    await prisma.brand.delete({ where: { id: params.id } })
+    await prisma.brand.delete({ where: { id } })
 
     await createAuditLog({
       action: 'BRAND_DELETED',
       entityType: 'brand',
-      entityId: params.id,
+      entityId: id,
       performedBy: admin?.name || 'System',
       details: `Deleted brand: ${brand.name} (${brand.email})`,
     })

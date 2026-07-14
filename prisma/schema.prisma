@@ -4,45 +4,82 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(DESIGNER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        Role         @default(DESIGNER)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  submissions Quote[]      @relation("DesignerSubmissions")
 
   @@map("users")
 }
 
 model Brand {
-  id        String      @id @default(cuid())
-  name      String
-  email     String      @unique
-  phone     String
-  password  String
-  status    BrandStatus @default(ACTIVE)
-  quotes    Quote[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  phone        String
+  password     String
+  status       BrandStatus @default(ACTIVE)
+  quotes       Quote[]
+  matrixCells  PricingMatrixCell[]
+
+  // Profile details
+  coverImage   String?
+  logo         String?
+  description  String?
+  addressLine1 String?
+  addressLine2 String?
+  locality     String?
+  city         String?
+  state        String?
+  pincode      String?
+  latitude     String?
+  longitude    String?
+  website      String?
+  linkedin     String?
+  facebook     String?
+  twitter      String?
+  instagram    String?
+  portfolio    String?     // JSON string storing projects & media urls
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   @@map("brands")
 }
 
 model Quote {
-  id          String      @id @default(cuid())
-  brand       Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  id          String          @id @default(cuid())
+  brand       Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
   brandId     String
+  designer    User?           @relation("DesignerSubmissions", fields: [designerId], references: [id], onDelete: SetNull)
+  designerId  String?
   projectName String
-  status      QuoteStatus @default(SUBMITTED)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  status      QuoteStatus     @default(SUBMITTED)
+  items       SubmissionItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@map("quotes")
+}
+
+model SubmissionItem {
+  id          String   @id @default(cuid())
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId     String
+  description String
+  quantity    Int      @default(1)
+  notes       String?
+  pricePerSft Float?
+  createdAt   DateTime @default(now())
+
+  @@map("submission_items")
 }
 
 model AuditLog {
@@ -69,8 +106,25 @@ enum BrandStatus {
 }
 
 enum QuoteStatus {
+  DRAFT
   SUBMITTED
   APPROVED
   REJECTED
   ACTIVE
+}
+
+model PricingMatrixCell {
+  id             String   @id @default(cuid())
+  brand          Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId        String
+  code           Int      // 1 or 2
+  hardware       String   // EBCO, HETTICH, HAFELE
+  coreMaterial   String   // MR Ply, BWP Ply, HDHMR
+  externalFinish String   // Laminate, Acrylic, PU
+  price          Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([brandId, code, hardware, coreMaterial, externalFinish])
+  @@map("pricing_matrix_cells")
 }
