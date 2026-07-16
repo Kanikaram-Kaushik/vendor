@@ -17,14 +17,14 @@ export async function GET(request: NextRequest) {
 
     const designerId = designer.id
 
-    // Fetch stats for this designer
+    // Fetch stats for this designer (only parent submissions)
     const [totalCount, draftCount, submittedCount, approvedCount, recentSubmissions] = await Promise.all([
-      prisma.quote.count({ where: { designerId } }),
-      prisma.quote.count({ where: { designerId, status: 'DRAFT' } }),
-      prisma.quote.count({ where: { designerId, status: 'SUBMITTED' } }),
-      prisma.quote.count({ where: { designerId, status: 'APPROVED' } }),
+      prisma.quote.count({ where: { designerId, parentQuoteId: null } }),
+      prisma.quote.count({ where: { designerId, parentQuoteId: null, status: 'DRAFT' } }),
+      prisma.quote.count({ where: { designerId, parentQuoteId: null, status: 'SUBMITTED' } }),
+      prisma.quote.count({ where: { designerId, parentQuoteId: null, status: 'APPROVED' } }),
       prisma.quote.findMany({
-        where: { designerId },
+        where: { designerId, parentQuoteId: null },
         orderBy: { createdAt: 'desc' },
         take: 6,
         include: {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       },
       recent: recentSubmissions.map(q => ({
         id: q.id,
-        customerName: q.brand.name,
+        customerName: q.brand?.name || 'Pending Distribution',
         projectName: q.projectName,
         status: q.status,
         itemsCount: q._count.items,

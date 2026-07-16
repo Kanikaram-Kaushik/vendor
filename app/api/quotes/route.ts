@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
 
     const quotes = await prisma.quote.findMany({
-      where: status ? { status: status as any } : undefined,
+      where: {
+        brandId: { not: null },
+        ...(status && { status: status as any }),
+      },
       orderBy: { createdAt: 'desc' },
       include: { brand: { select: { name: true, email: true } } },
     })
@@ -25,8 +28,8 @@ export async function GET(request: NextRequest) {
       quotes: quotes.map((q) => ({
         id: q.id,
         brandId: q.brandId,
-        brandName: q.brand.name,
-        brandEmail: q.brand.email,
+        brandName: q.brand?.name || 'Pending Distribution',
+        brandEmail: q.brand?.email || '',
         projectName: q.projectName,
         status: q.status,
         createdAt: q.createdAt,
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
       entityType: 'quote',
       entityId: quote.id,
       performedBy: admin?.name || 'System',
-      details: `Created quote: ${projectName} for ${quote.brand.name}`,
+      details: `Created quote: ${projectName} for ${quote.brand?.name || 'Unknown'}`,
     })
 
     return NextResponse.json({ quote }, { status: 201 })

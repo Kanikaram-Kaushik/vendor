@@ -55,29 +55,38 @@ model Brand {
 }
 
 model Quote {
-  id          String          @id @default(cuid())
-  brand       Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  brandId     String
-  designer    User?           @relation("DesignerSubmissions", fields: [designerId], references: [id], onDelete: SetNull)
-  designerId  String?
-  projectName String
-  status      QuoteStatus     @default(SUBMITTED)
-  items       SubmissionItem[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id             String           @id @default(cuid())
+  brand          Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId        String?
+  designer       User?            @relation("DesignerSubmissions", fields: [designerId], references: [id], onDelete: SetNull)
+  designerId     String?
+  projectName    String
+  status         QuoteStatus      @default(SUBMITTED)
+  items          SubmissionItem[]
+  designerBudget Float?
+  parentQuoteId  String?
+  parentQuote    Quote?           @relation("QuoteToQuote", fields: [parentQuoteId], references: [id], onDelete: SetNull)
+  childQuotes    Quote[]          @relation("QuoteToQuote")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@map("quotes")
 }
 
 model SubmissionItem {
-  id          String   @id @default(cuid())
-  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  quoteId     String
-  description String
-  quantity    Int      @default(1)
-  notes       String?
-  pricePerSft Float?
-  createdAt   DateTime @default(now())
+  id             String   @id @default(cuid())
+  quote          Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId        String
+  description    String
+  quantity       Int      @default(1)
+  notes          String?
+  pricePerSft    Float?
+  itemType       String?
+  hardware       String?
+  coreMaterial   String?
+  externalFinish String?
+  sft            Float?
+  createdAt      DateTime @default(now())
 
   @@map("submission_items")
 }

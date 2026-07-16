@@ -67,7 +67,7 @@ export async function DELETE(
       entityType: 'quote',
       entityId: id,
       performedBy: admin?.name || 'System',
-      details: `Deleted quote: ${quote.projectName} for ${quote.brand.name}`,
+      details: `Deleted quote: ${quote.projectName} for ${quote.brand?.name || 'Pending Distribution'}`,
     })
 
     return NextResponse.json({ success: true })

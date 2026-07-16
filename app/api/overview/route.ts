@@ -51,7 +51,7 @@ export async function GET() {
       pipeline,
       recentQuotes: recentQuotes.map((q) => ({
         id: q.id,
-        brandName: q.brand.name,
+        brandName: q.brand?.name || 'Pending Distribution',
         projectName: q.projectName,
         status: q.status,
         createdAt: q.createdAt,

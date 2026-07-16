@@ -34,7 +34,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { projectName, status, items } = await request.json()
+    const { projectName, status, items, designerBudget } = await request.json()
 
     // Map DECLINED from frontend to REJECTED in database if any, but designers don't reject their own submissions.
     // They can transition from DRAFT to SUBMITTED.
@@ -46,6 +46,7 @@ export async function PATCH(
       data: {
         ...(projectName && { projectName }),
         status: targetStatus,
+        designerBudget: designerBudget !== undefined ? (designerBudget ? parseFloat(designerBudget) : null) : undefined,
       },
       include: {
         brand: { select: { name: true } },
@@ -64,6 +65,11 @@ export async function PATCH(
             description: item.description,
             quantity: item.quantity || 1,
             notes: item.notes || '',
+            itemType: item.itemType || null,
+            hardware: item.hardware || null,
+            coreMaterial: item.coreMaterial || null,
+            externalFinish: item.externalFinish || null,
+            sft: item.sft ? parseFloat(item.sft) : null,
           })),
         })
       }

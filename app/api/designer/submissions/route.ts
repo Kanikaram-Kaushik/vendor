@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     const submissions = await prisma.quote.findMany({
       where: {
         designerId: designer.id,
+        parentQuoteId: null, // Only fetch parent submissions
         ...(dbStatus && { status: dbStatus }),
       },
       orderBy: { createdAt: 'desc' },
@@ -45,10 +46,11 @@ export async function GET(request: NextRequest) {
       submissions: submissions.map((s) => ({
         id: s.id,
         brandId: s.brandId,
-        brandName: s.brand.name,
-        brandEmail: s.brand.email,
+        brandName: s.brand?.name || 'Pending Distribution',
+        brandEmail: s.brand?.email || '',
         projectName: s.projectName,
         status: s.status === 'REJECTED' ? 'DECLINED' : s.status,
+        designerBudget: s.designerBudget,
         itemsCount: s.items.length,
         items: s.items,
         createdAt: s.createdAt,
@@ -68,11 +70,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { brandId, projectName, status, items } = await request.json()
+    const { projectName, status, items, designerBudget } = await request.json()
 
-    if (!brandId || !projectName) {
+    if (!projectName) {
       return NextResponse.json(
-        { error: 'Customer and Project Name are required' },
+        { error: 'Project Name is required' },
         { status: 400 }
       )
     }
@@ -83,22 +85,26 @@ export async function POST(request: NextRequest) {
     // Create the quote
     const submission = await prisma.quote.create({
       data: {
-        brandId,
         projectName,
         designerId: designer.id,
         status: targetStatus,
+        designerBudget: designerBudget ? parseFloat(designerBudget) : null,
         ...(items && items.length > 0 && {
           items: {
             create: items.map((item: any) => ({
               description: item.description,
               quantity: item.quantity || 1,
               notes: item.notes || '',
+              itemType: item.itemType || null,
+              hardware: item.hardware || null,
+              coreMaterial: item.coreMaterial || null,
+              externalFinish: item.externalFinish || null,
+              sft: item.sft ? parseFloat(item.sft) : null,
             })),
           },
         }),
       },
       include: {
-        brand: { select: { name: true } },
         items: true,
       },
     })
@@ -108,14 +114,14 @@ export async function POST(request: NextRequest) {
       entityType: 'quote',
       entityId: submission.id,
       performedBy: designer.name,
-      details: `Designer created submission: ${projectName} for ${submission.brand.name} (${targetStatus})`,
+      details: `Designer created submission: ${projectName} (${targetStatus})`,
     })
 
     return NextResponse.json({
       success: true,
       submission: {
         id: submission.id,
-        brandName: submission.brand.name,
+        brandName: 'Pending Distribution',
         projectName: submission.projectName,
         status: submission.status,
         itemsCount: submission.items.length,

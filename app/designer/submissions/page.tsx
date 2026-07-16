@@ -6,22 +6,34 @@ import { useSearchParams, useRouter } from 'next/navigation'
 interface SubmissionItem {
   description: string
   quantity: number
+  itemType?: string
+  hardware?: string
+  coreMaterial?: string
+  externalFinish?: string
+  sft?: number
+  notes?: string
 }
 
 interface Submission {
   id: string
-  brandId: string
+  brandId: string | null
   brandName: string
   brandEmail: string
   projectName: string
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'DECLINED'
   itemsCount: number
+  designerBudget?: number | null
   items?: Array<{
     id: string
     description: string
     quantity: number
     notes?: string
     pricePerSft?: number | null
+    itemType?: string | null
+    hardware?: string | null
+    coreMaterial?: string | null
+    externalFinish?: string | null
+    sft?: number | null
   }>
   createdAt: string
 }
@@ -30,6 +42,27 @@ interface Brand {
   id: string
   name: string
 }
+
+const HARDWARES = ['EBCO', 'HETTICH', 'HAFELE']
+const CORES = ['MR Ply', 'BWP Ply', 'HDHMR']
+const FINISHES = ['Laminate', 'Acrylic', 'PU']
+const ITEM_TYPES = [
+  'Tv Cabinet',
+  'Crockery Unit',
+  'Puja Unit',
+  'Partition',
+  'Wardrobe',
+  'Tv Unit',
+  'Study Unit',
+  'Bed',
+  'Bedside Table',
+  'Dressing Unit',
+  'Base Unit (Kitchen)',
+  'Wall Unit (Kitchen)',
+  'Loft',
+  'Tall units (Kitchen)',
+  'Shoerack'
+]
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
@@ -42,137 +75,9 @@ function StatusBadge({ status }: { status: string }) {
     DECLINED: 'badge badge-rejected',
     SUBMITTED: 'badge badge-submitted',
     DRAFT: 'badge badge-pending',
+    ACTIVE: 'badge badge-active',
   }
   return <span className={cls[status] || 'badge badge-pending'}>{status.charAt(0) + status.slice(1).toLowerCase()}</span>
-}
-
-function NewSubmissionModal({
-  brands,
-  onClose,
-  onSave,
-}: {
-  brands: Brand[]
-  onClose: () => void
-  onSave: () => void
-}) {
-  const [brandId, setBrandId] = useState(brands[0]?.id || '')
-  const [projectName, setProjectName] = useState('')
-  const [items, setItems] = useState<SubmissionItem[]>([])
-  const [desc, setDesc] = useState('')
-  const [qty, setQty] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  function addItem() {
-    if (!desc.trim()) return
-    setItems([...items, { description: desc, quantity: qty }])
-    setDesc('')
-    setQty(1)
-  }
-
-  function removeItem(index: number) {
-    setItems(items.filter((_, i) => i !== index))
-  }
-
-  async function handleSubmit(asDraft: boolean) {
-    if (!brandId || !projectName) {
-      setError('Please select a Customer and enter a Project Name.')
-      return
-    }
-    setError('')
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/designer/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brandId,
-          projectName,
-          status: asDraft ? 'DRAFT' : 'SUBMITTED',
-          items,
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to create submission')
-        setLoading(false)
-        return
-      }
-
-      onSave()
-    } catch {
-      setError('Network error')
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
-        <h2 className="modal-title">New Submission</h2>
-        {error && <div className="login-error">{error}</div>}
-
-        <div className="form-group">
-          <label className="form-label">Customer (Brand)</label>
-          <select className="form-select" value={brandId} onChange={(e) => setBrandId(e.target.value)} required>
-            {brands.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Project Name</label>
-          <input className="form-input" value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="e.g. Customer 1 project details" required />
-        </div>
-
-        {/* Submission Items Section */}
-        <div style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 12, marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Items list</div>
-          
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-            <input className="form-input" style={{ flex: 2, padding: 6 }} placeholder="Item description..." value={desc} onChange={e => setDesc(e.target.value)} />
-            <input type="number" className="form-input" style={{ flex: 1, minWidth: 60, padding: 6 }} min="1" placeholder="Qty" value={qty} onChange={e => setQty(Number(e.target.value))} />
-            <input className="form-input" style={{ flex: 1, minWidth: 80, padding: 6, backgroundColor: '#f5f5f5', cursor: 'not-allowed' }} placeholder="Price / SFT" disabled value="" />
-            <button type="button" className="btn btn-secondary" style={{ padding: '6px 12px' }} onClick={addItem}>Add</button>
-          </div>
-
-          {items.length > 0 ? (
-            <div style={{ maxHeight: 150, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {items.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '6px 8px', borderRadius: 4, fontSize: 12.5, gap: 8 }}>
-                  <span style={{ flex: 2 }}>{item.description} ({item.quantity})</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Price/SFT:</span>
-                    <input className="form-input" style={{ width: 80, padding: '2px 6px', fontSize: 12, backgroundColor: '#f5f5f5', cursor: 'not-allowed', textAlign: 'right' }} placeholder="Blocked" disabled value="" />
-                  </div>
-                  <button type="button" style={{ color: 'red', fontWeight: 600, marginLeft: 4 }} onClick={() => removeItem(idx)}>×</button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No items added yet.</div>
-          )}
-        </div>
-
-        <div className="form-actions">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="button" className="btn btn-secondary" disabled={loading} onClick={() => handleSubmit(true)}>
-            Save as Draft
-          </button>
-          <button type="button" className="btn btn-primary" disabled={loading} style={{ background: '#111' }} onClick={() => handleSubmit(false)}>
-            Submit for Review
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function ActionsMenu({
@@ -225,104 +130,19 @@ function ActionsMenu({
   )
 }
 
-function ViewSubmissionModal({
-  submission,
-  onClose,
-}: {
-  submission: Submission
-  onClose: () => void
-}) {
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 550 }}>
-        <h2 className="modal-title">Submission Details</h2>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: 11, marginBottom: 2 }}>Customer (Brand)</label>
-            <div style={{ fontWeight: 500, fontSize: 13.5 }}>{submission.brandName}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{submission.brandEmail}</div>
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: 11, marginBottom: 2 }}>Project Name</label>
-            <div style={{ fontWeight: 500, fontSize: 13.5 }}>{submission.projectName}</div>
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>Status</label>
-            <div>
-              <StatusBadge status={submission.status} />
-            </div>
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: 11, marginBottom: 2 }}>Created Date</label>
-            <div style={{ fontSize: 13 }}>{formatDate(submission.createdAt)}</div>
-          </div>
-        </div>
-
-        {/* Submission Items List */}
-        <div style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 14, marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase' }}>
-            Items & Pricing
-          </div>
-          
-          {submission.items && submission.items.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
-              {submission.items.map((item, idx) => (
-                <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '8px 12px', borderRadius: 4, fontSize: 13, gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500 }}>{item.description}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Qty: {item.quantity}</div>
-                    {item.notes && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>Note: {item.notes}</div>}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Price/SFT:</span>
-                    <input 
-                      className="form-input" 
-                      style={{ width: 100, padding: '4px 8px', fontSize: 12, backgroundColor: '#f5f5f5', cursor: 'not-allowed', textAlign: 'right' }} 
-                      placeholder="Pending" 
-                      disabled 
-                      value={item.pricePerSft !== undefined && item.pricePerSft !== null ? `₹${item.pricePerSft}` : ''} 
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>No items in this submission.</div>
-          )}
-        </div>
-
-        <div className="form-actions" style={{ justifyContent: 'flex-end', marginTop: 16 }}>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function SubmissionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
   const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
-  const [showModal, setShowModal] = useState(false)
-  const [selectedSub, setSelectedSub] = useState<Submission | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, bRes] = await Promise.all([
-        fetch(`/api/designer/submissions?status=${statusFilter}`),
-        fetch('/api/brands/public'),
-      ])
+      const sRes = await fetch(`/api/designer/submissions?status=${statusFilter}`)
       const sData = await sRes.json()
-      const bData = await bRes.json()
       setSubmissions(sData.submissions || [])
-      setBrands(bData.brands || [])
     } catch (err) {
       console.error(err)
     } finally {
@@ -334,12 +154,10 @@ function SubmissionsContent() {
     fetchData()
   }, [fetchData])
 
-  // Open modal if page is navigated with open=true search param
+  // Redirect to new page if navigated with open=true search param
   useEffect(() => {
     if (searchParams.get('open') === 'true') {
-      setShowModal(true)
-      // clear the param from url
-      router.replace('/designer/submissions')
+      router.push('/designer/submissions/new')
     }
   }, [searchParams, router])
 
@@ -388,7 +206,7 @@ function SubmissionsContent() {
             <button
               className="btn btn-primary"
               style={{ background: '#000', color: '#fff', fontWeight: 600, padding: '8px 16px', borderRadius: 4 }}
-              onClick={() => setShowModal(true)}
+              onClick={() => router.push('/designer/submissions/new')}
             >
               + New Submission
             </button>
@@ -408,6 +226,7 @@ function SubmissionsContent() {
                 <tr>
                   <th>Customer</th>
                   <th>Project</th>
+                  <th>Budget</th>
                   <th>Items</th>
                   <th>Status</th>
                   <th>Created</th>
@@ -416,11 +235,14 @@ function SubmissionsContent() {
               </thead>
               <tbody>
                 {submissions.map((sub) => (
-                  <tr key={sub.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedSub(sub)}>
+                  <tr key={sub.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/designer/submissions/${sub.id}`)}>
                     <td style={{ fontWeight: 500 }}>{sub.brandName}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>{sub.projectName}</td>
+                    <td style={{ fontWeight: 500, color: '#16a34a' }}>
+                      {sub.designerBudget ? `₹${sub.designerBudget.toLocaleString('en-IN')}` : '-'}
+                    </td>
                     <td style={{ color: 'var(--text-muted)' }}>
-                      {sub.itemsCount === 0 ? '-' : sub.itemsCount}
+                      {sub.itemsCount === 0 ? '-' : `${sub.itemsCount} items`}
                     </td>
                     <td>
                       <StatusBadge status={sub.status} />
@@ -429,7 +251,7 @@ function SubmissionsContent() {
                     <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                       <ActionsMenu
                         submission={sub}
-                        onView={() => setSelectedSub(sub)}
+                        onView={() => router.push(`/designer/submissions/${sub.id}`)}
                         onSubmit={handleSubmitDraft}
                         onDelete={handleDeleteDraft}
                       />
@@ -441,24 +263,6 @@ function SubmissionsContent() {
           )}
         </div>
       </div>
-
-      {showModal && (
-        <NewSubmissionModal
-          brands={brands}
-          onClose={() => setShowModal(false)}
-          onSave={() => {
-            setShowModal(false)
-            fetchData()
-          }}
-        />
-      )}
-
-      {selectedSub && (
-        <ViewSubmissionModal
-          submission={selectedSub}
-          onClose={() => setSelectedSub(null)}
-        />
-      )}
     </div>
   )
 }
