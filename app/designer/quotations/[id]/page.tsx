@@ -91,6 +91,137 @@ function QuotationDetail({ id }: { id: string }) {
     }
   }
 
+  const handleDownloadPDF = async () => {
+    if (!quotation) return
+    try {
+      const { jsPDF } = await import('jspdf')
+      const doc = new jsPDF()
+
+      // Set Font
+      doc.setFont('helvetica', 'normal')
+
+      // Header Banner
+      doc.setFillColor(17, 17, 17)
+      doc.rect(0, 0, 210, 30, 'F')
+
+      // Header Title
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('DESIGNBHK', 15, 20)
+
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text('BRAND QUOTATION', 165, 20)
+
+      // Reset text color to primary
+      doc.setTextColor(17, 17, 17)
+
+      // Section: Details Block
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Quotation Details', 15, 45)
+
+      // Metadata Info left
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Brand Name:', 15, 55)
+      doc.setFont('helvetica', 'normal')
+      doc.text(quotation.brandName, 42, 55)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Brand Email:', 15, 62)
+      doc.setFont('helvetica', 'normal')
+      doc.text(quotation.brandEmail, 42, 62)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Date Received:', 15, 69)
+      doc.setFont('helvetica', 'normal')
+      doc.text(formatDate(quotation.createdAt), 45, 69)
+
+      // Metadata Info right
+      doc.setFont('helvetica', 'bold')
+      doc.text('Project Name:', 110, 55)
+      doc.setFont('helvetica', 'normal')
+      doc.text(quotation.projectName, 138, 55)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Status:', 110, 62)
+      doc.setFont('helvetica', 'normal')
+      doc.text(quotation.status, 138, 62)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Designer Budget:', 110, 69)
+      doc.setFont('helvetica', 'normal')
+      doc.text(quotation.designerBudget ? `INR ${quotation.designerBudget.toLocaleString('en-IN')}` : 'No Budget Set', 142, 69)
+
+      // Divider Line
+      doc.setDrawColor(220, 220, 220)
+      doc.line(15, 78, 195, 78)
+
+      // Section: Itemized Rates Header
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Itemized Specifications', 15, 87)
+
+      // Table Header
+      let y = 96
+      doc.setFillColor(245, 245, 245)
+      doc.rect(15, y, 180, 8, 'F')
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Description', 18, y + 5)
+      doc.text('Size (SFT)', 115, y + 5)
+      doc.text('Qty', 140, y + 5)
+      doc.text('Rate/SFT', 155, y + 5)
+      doc.text('Total', 180, y + 5)
+
+      y += 8
+      doc.setFont('helvetica', 'normal')
+
+      // Items loop
+      quotation.items.forEach((item, index) => {
+        // Draw row background for alternating rows
+        if (index % 2 === 1) {
+          doc.setFillColor(250, 250, 250)
+          doc.rect(15, y, 180, 10, 'F')
+        }
+
+        // Draw description text (truncate if too long)
+        const desc = item.description.length > 55 ? item.description.substring(0, 52) + '...' : item.description
+        doc.text(desc, 18, y + 6)
+        
+        doc.text(String(item.sft), 115, y + 6)
+        doc.text(String(item.quantity), 140, y + 6)
+        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, y + 6)
+
+        const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
+        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, y + 6)
+
+        y += 10
+      })
+
+      // Divider Line
+      doc.line(15, y + 4, 195, y + 4)
+      y += 12
+
+      // Estimated Brand Total
+      if (quotation.totalPrice !== null) {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(11)
+        doc.text('Estimated Brand Total:', 110, y)
+        doc.text(`INR ${quotation.totalPrice.toLocaleString('en-IN')}`, 160, y)
+      }
+
+      // Save Document
+      doc.save(`Quotation-${quotation.projectName.replace(/\s+/g, '_')}.pdf`)
+    } catch (err) {
+      console.error('Failed to generate PDF:', err)
+      alert('Error generating PDF. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div style={{ maxWidth: 800, margin: '40px auto', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -120,7 +251,7 @@ function QuotationDetail({ id }: { id: string }) {
           <p className="page-subtitle">Received from {quotation.brandName}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary no-print" onClick={() => window.print()}>
+          <button className="btn btn-secondary no-print" onClick={handleDownloadPDF}>
             Download PDF
           </button>
           <button className="btn btn-secondary no-print" onClick={() => router.push('/designer/quotations')}>
