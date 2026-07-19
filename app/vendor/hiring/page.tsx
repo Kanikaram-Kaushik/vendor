@@ -27,8 +27,8 @@ export default function VendorHiringPage() {
   const [currentVendorId, setCurrentVendorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   
-  // Modal & form state
-  const [showModal, setShowModal] = useState(false)
+  // Form state
+  const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [role, setRole] = useState('Interior Designer')
   const [location, setLocation] = useState('')
@@ -105,7 +105,7 @@ export default function VendorHiringPage() {
         setLocation('')
         setSalary('')
         setDescription('')
-        setShowModal(false)
+        setShowForm(false)
         fetchPosts()
       } else {
         const data = await res.json()
@@ -146,13 +146,134 @@ export default function VendorHiringPage() {
         <button
           className="btn btn-primary"
           style={{ background: '#111', color: '#fff', fontWeight: 600, padding: '10px 20px', borderRadius: 6 }}
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowForm(!showForm)}
         >
-          + Post a Job
+          {showForm ? 'Cancel' : '+ Post a Job'}
         </button>
       </div>
 
       <div className="page-body">
+        {/* Inline Creation Form Section */}
+        {showForm && (
+          <div
+            className="card"
+            style={{
+              padding: 24,
+              marginBottom: 24,
+              border: '1px solid var(--border)',
+              backgroundColor: '#fafafa',
+              borderRadius: 12,
+            }}
+          >
+            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: '#111' }}>
+              Create a New Job Opening
+            </h2>
+            
+            {formError && (
+              <div className="login-error" style={{ marginBottom: 14, padding: '10px 12px', fontSize: 12.5 }}>
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreatePost}>
+              <div className="form-group">
+                <label className="form-label">Job Title</label>
+                <input
+                  className="form-input"
+                  placeholder="e.g. Senior 3D Designer"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="form-group">
+                  <label className="form-label">Category / Role</label>
+                  <select
+                    className="form-select"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="Interior Designer">Interior Designer</option>
+                    <option value="3D Visualizer">3D Visualizer</option>
+                    <option value="Architect">Architect</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="Site Engineer">Site Engineer</option>
+                    <option value="Draftsman">Draftsman</option>
+                    <option value="Sales & Marketing">Sales & Marketing</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Job Location</label>
+                  <input
+                    className="form-input"
+                    placeholder="e.g. Remote / Bangalore"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="form-group">
+                  <label className="form-label">Salary / Compensation</label>
+                  <input
+                    className="form-input"
+                    placeholder="e.g. ₹50k - ₹70k / month"
+                    value={salary}
+                    onChange={(e) => setSalary(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Contact Email / Info</label>
+                  <input
+                    className="form-input"
+                    placeholder="e.g. jobs@yourbrand.com"
+                    value={contactInfo}
+                    onChange={(e) => setContactInfo(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Job Description</label>
+                <textarea
+                  className="form-input"
+                  style={{ minHeight: 100, resize: 'vertical' }}
+                  placeholder="Describe details, roles, requirements, and qualifications..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-actions" style={{ marginTop: 20, justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowForm(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ background: '#111', color: '#fff' }}
+                  disabled={submitting}
+                >
+                  {submitting ? 'Posting…' : 'Publish Post'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {loading ? (
           <div className="empty-state">
             <div className="empty-state-text">Loading job posts…</div>
@@ -298,118 +419,6 @@ export default function VendorHiringPage() {
           </div>
         )}
       </div>
-
-      {/* Creation Modal Overlay */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" style={{ maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title" style={{ fontSize: 18, marginBottom: 16 }}>Post a New Job Opening</h2>
-            
-            {formError && (
-              <div className="login-error" style={{ marginBottom: 14, padding: '10px 12px', fontSize: 12.5 }}>
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreatePost}>
-              <div className="form-group">
-                <label className="form-label">Job Title</label>
-                <input
-                  className="form-input"
-                  placeholder="e.g. Senior 3D Designer"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="form-group">
-                  <label className="form-label">Category / Role</label>
-                  <select
-                    className="form-select"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="Interior Designer">Interior Designer</option>
-                    <option value="3D Visualizer">3D Visualizer</option>
-                    <option value="Architect">Architect</option>
-                    <option value="Project Manager">Project Manager</option>
-                    <option value="Site Engineer">Site Engineer</option>
-                    <option value="Draftsman">Draftsman</option>
-                    <option value="Sales & Marketing">Sales & Marketing</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Job Location</label>
-                  <input
-                    className="form-input"
-                    placeholder="e.g. Remote / Bangalore"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="form-group">
-                  <label className="form-label">Salary / Compensation</label>
-                  <input
-                    className="form-input"
-                    placeholder="e.g. ₹50k - ₹70k / month"
-                    value={salary}
-                    onChange={(e) => setSalary(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Contact Email / Info</label>
-                  <input
-                    className="form-input"
-                    placeholder="e.g. jobs@yourbrand.com"
-                    value={contactInfo}
-                    onChange={(e) => setContactInfo(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Job Description</label>
-                <textarea
-                  className="form-input"
-                  style={{ minHeight: 100, resize: 'vertical' }}
-                  placeholder="Describe details, roles, requirements, and qualifications..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-actions" style={{ marginTop: 20 }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                  disabled={submitting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ background: '#111', color: '#fff' }}
-                  disabled={submitting}
-                >
-                  {submitting ? 'Posting…' : 'Publish Post'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
