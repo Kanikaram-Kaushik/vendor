@@ -119,9 +119,14 @@ function QuotationDetail({ id }: { id: string }) {
           <h1 className="page-title">Quotation Details</h1>
           <p className="page-subtitle">Received from {quotation.brandName}</p>
         </div>
-        <button className="btn btn-secondary" onClick={() => router.push('/designer/quotations')}>
-          ← Back to List
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-secondary no-print" onClick={() => window.print()}>
+            Download PDF
+          </button>
+          <button className="btn btn-secondary no-print" onClick={() => router.push('/designer/quotations')}>
+            ← Back to List
+          </button>
+        </div>
       </div>
 
       {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
