@@ -28,6 +28,7 @@ model Brand {
   status       BrandStatus @default(ACTIVE)
   quotes       Quote[]
   matrixCells  PricingMatrixCell[]
+  hiringPosts  HiringPost[]
 
   // Profile details
   coverImage   String?
@@ -136,4 +137,20 @@ model PricingMatrixCell {
 
   @@unique([brandId, code, hardware, coreMaterial, externalFinish])
   @@map("pricing_matrix_cells")
+}
+
+model HiringPost {
+  id          String   @id @default(cuid())
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId     String
+  title       String
+  description String
+  role        String
+  location    String?
+  salary      String?
+  contactInfo String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hiring_posts")
 }
