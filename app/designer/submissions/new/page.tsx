@@ -46,7 +46,8 @@ export default function NewSubmissionPage() {
   const [coreMaterial, setCoreMaterial] = useState(CORES[0])
   const [externalFinish, setExternalFinish] = useState(FINISHES[0])
   const [hardware, setHardware] = useState(HARDWARES[0])
-  const [sft, setSft] = useState(10)
+  const [width, setWidth] = useState<number | ''>(5)
+  const [length, setLength] = useState<number | ''>(2)
   const [qty, setQty] = useState(1)
   const [itemNotes, setItemNotes] = useState('')
 
@@ -54,7 +55,18 @@ export default function NewSubmissionPage() {
   const [error, setError] = useState('')
 
   function addItem() {
+    if (!width || Number(width) <= 0 || !length || Number(length) <= 0) {
+      setError('Please enter a valid Width and Length (greater than 0).')
+      return
+    }
+    if (qty <= 0) {
+      setError('Quantity must be greater than 0.')
+      return
+    }
+    setError('')
+
     const description = `${itemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
+    const sftVal = Math.round(Number(width) * Number(length) * 100) / 100
     setItems([
       ...items,
       {
@@ -64,13 +76,14 @@ export default function NewSubmissionPage() {
         coreMaterial,
         externalFinish,
         hardware,
-        sft,
+        sft: sftVal,
         notes: itemNotes,
       },
     ])
     setItemNotes('')
     setQty(1)
-    setSft(10)
+    setWidth(5)
+    setLength(2)
   }
 
   function removeItem(index: number) {
@@ -142,7 +155,7 @@ export default function NewSubmissionPage() {
             Add Project Item Spec
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Option Type</label>
               <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={itemType} onChange={e => setItemType(e.target.value)}>
@@ -161,18 +174,26 @@ export default function NewSubmissionPage() {
                 {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Hardware</label>
               <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={hardware} onChange={e => setHardware(e.target.value)}>
                 {HARDWARES.map(h => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr 1fr', gap: 12, marginBottom: 16 }}>
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Size (SFT)</label>
-              <input type="number" min="1" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={sft} onChange={e => setSft(Number(e.target.value))} />
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Width (Ft)</label>
+              <input type="number" min="0.1" step="any" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={width} onChange={e => setWidth(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 5" />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Length/Height (Ft)</label>
+              <input type="number" min="0.1" step="any" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={length} onChange={e => setLength(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 2" />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Calculated Size (SFT)</label>
+              <input type="number" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6, backgroundColor: '#f3f4f6', cursor: 'not-allowed', color: '#374151', fontWeight: 600 }} value={(width && length) ? Math.round(width * length * 100) / 100 : ''} readOnly placeholder="Auto-calculated" />
             </div>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Quantity</label>
