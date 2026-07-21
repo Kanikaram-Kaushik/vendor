@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
+import { getEffectiveQuotationExpiresAt, isQuotationWindowClosed } from '@/lib/quote-window'
 
 async function getVendor(request: NextRequest) {
   const token = request.cookies.get('vendor-token')?.value
@@ -32,6 +33,10 @@ export async function PATCH(
     // Verify this quote belongs to the vendor's brand
     if (quote.brandId !== vendor.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    if (isQuotationWindowClosed(quote.quotationExpiresAt, quote.quotationWindowHours, quote.createdAt)) {
+      return NextResponse.json({ error: 'Quotation window has closed' }, { status: 400 })
     }
 
     const { status, items } = await request.json()
@@ -78,7 +83,15 @@ export async function PATCH(
       details: `Vendor priced/updated quote: ${quote.projectName} (${targetStatus})`,
     })
 
-    return NextResponse.json({ success: true, quote: updatedQuote })
+    return NextResponse.json({
+      success: true,
+      quote: {
+        ...updatedQuote,
+        quotationWindowHours: updatedQuote.quotationWindowHours,
+        quotationExpiresAt: getEffectiveQuotationExpiresAt(updatedQuote.quotationExpiresAt, updatedQuote.quotationWindowHours, updatedQuote.createdAt),
+        referenceImage: updatedQuote.referenceImage,
+      },
+    })
   } catch (error) {
     console.error('Vendor quote PATCH error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

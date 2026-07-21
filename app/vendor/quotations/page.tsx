@@ -25,11 +25,25 @@ interface Quote {
   itemsCount: number
   items?: QuoteItem[]
   createdAt: string
+  quotationWindowHours?: number | null
+  quotationExpiresAt?: string | null
+  isQuotationClosed?: boolean
+  referenceImage?: string | null
 }
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
+  if (!expiresAt) return 'No window set'
+  const remaining = new Date(expiresAt).getTime() - now
+  if (remaining <= 0) return 'Closed'
+  const totalMinutes = Math.ceil(remaining / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -47,6 +61,7 @@ export default function VendorQuotationsPage() {
   const router = useRouter()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
+  const [now, setNow] = useState(Date.now())
 
   const fetchQuotes = useCallback(async () => {
     try {
@@ -65,6 +80,11 @@ export default function VendorQuotationsPage() {
   useEffect(() => {
     fetchQuotes()
   }, [fetchQuotes])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   return (
     <div>
@@ -96,6 +116,7 @@ export default function VendorQuotationsPage() {
                   <th>Project Name</th>
                   <th>Submitted By</th>
                   <th>Items</th>
+                  <th>Window</th>
                   <th>Status</th>
                   <th>Received Date</th>
                 </tr>
@@ -110,6 +131,9 @@ export default function VendorQuotationsPage() {
                     </td>
                     <td style={{ color: 'var(--text-muted)' }}>
                       {q.itemsCount === 0 ? '-' : q.itemsCount}
+                    </td>
+                    <td style={{ color: q.isQuotationClosed ? '#b91c1c' : 'var(--text-secondary)', fontWeight: 500 }}>
+                      {q.quotationWindowHours ? `${q.quotationWindowHours}h • ${formatTimeRemaining(q.quotationExpiresAt, now)}` : formatTimeRemaining(q.quotationExpiresAt, now)}
                     </td>
                     <td>
                       <StatusBadge status={q.status} />

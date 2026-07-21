@@ -25,6 +25,10 @@ interface Quote {
   itemsCount: number
   items?: QuoteItem[]
   createdAt: string
+  quotationWindowHours?: number | null
+  quotationExpiresAt?: string | null
+  isQuotationClosed?: boolean
+  referenceImage?: string | null
 }
 
 const HARDWARES = ['EBCO', 'HETTICH', 'HAFELE']
@@ -54,6 +58,16 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
+  if (!expiresAt) return 'No window set'
+  const remaining = new Date(expiresAt).getTime() - now
+  if (remaining <= 0) return 'Closed'
+  const totalMinutes = Math.ceil(remaining / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`
+}
+
 function StatusBadge({ status }: { status: string }) {
   const cls: Record<string, string> = {
     APPROVED: 'badge badge-approved',
@@ -73,6 +87,7 @@ function QuoteDetail({ id }: { id: string }) {
   const [prices, setPrices] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
   const [matrixCells, setMatrixCells] = useState<any[]>([])
+  const [now, setNow] = useState(Date.now())
 
   // Lookup state per item
   const [lookupItemId, setLookupItemId] = useState<string | null>(null)
@@ -122,6 +137,11 @@ function QuoteDetail({ id }: { id: string }) {
   useEffect(() => {
     fetchDetail()
   }, [fetchDetail])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const getMatrixPrice = (itemType: string, core: string, finish: string, hw: string) => {
     const matchedType = ITEM_TYPES.find(it => it.name === itemType)
@@ -188,7 +208,7 @@ function QuoteDetail({ id }: { id: string }) {
     )
   }
 
-  const isEditable = quote.status === 'SUBMITTED'
+  const isEditable = quote.status === 'SUBMITTED' && !quote.isQuotationClosed
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '20px' }}>
@@ -222,10 +242,40 @@ function QuoteDetail({ id }: { id: string }) {
             </div>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Quotation Window</label>
+            <div style={{ fontWeight: 600, color: quote.isQuotationClosed ? '#b91c1c' : 'var(--text-primary)' }}>
+                {quote.quotationWindowHours ? `${quote.quotationWindowHours}h • ${formatTimeRemaining(quote.quotationExpiresAt, now)}` : formatTimeRemaining(quote.quotationExpiresAt, now)}
+            </div>
+            {quote.quotationExpiresAt && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                Closes on {new Date(quote.quotationExpiresAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              </div>
+            )}
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Received Date</label>
             <div>{formatDate(quote.createdAt)}</div>
           </div>
         </div>
+
+        {quote.isQuotationClosed && (
+          <div className="login-error" style={{ marginBottom: 20, background: '#fef2f2', color: '#991b1b', borderColor: '#fecaca' }}>
+            This quotation window has closed. Vendors can no longer submit or update prices.
+          </div>
+        )}
+
+        {quote.referenceImage && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Reference Image
+            </div>
+            <img
+              src={quote.referenceImage}
+              alt="Designer reference"
+              style={{ width: '100%', maxWidth: 520, borderRadius: 10, border: '1px solid var(--border)', objectFit: 'cover' }}
+            />
+          </div>
+        )}
 
         {/* Items Pricing Table */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, marginBottom: 24, backgroundColor: '#fafafa' }}>
@@ -397,6 +447,11 @@ function QuoteDetail({ id }: { id: string }) {
                 {actionLoading ? 'Submitting…' : '✓ Approve & Submit Quote'}
               </button>
             </>
+          )}
+          {!isEditable && quote.status === 'SUBMITTED' && quote.isQuotationClosed && (
+            <button type="button" className="btn btn-secondary" disabled>
+              Quotation Window Closed
+            </button>
           )}
         </div>
       </div>

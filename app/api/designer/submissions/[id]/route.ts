@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
+import { getEffectiveQuotationExpiresAt, getQuotationExpiresAt } from '@/lib/quote-window'
 
 async function getDesigner(request: NextRequest) {
   const token = request.cookies.get('designer-token')?.value
@@ -23,7 +24,7 @@ export async function PATCH(
 
     const submission = await prisma.quote.findUnique({
       where: { id },
-      select: { designerId: true, status: true, projectName: true },
+      select: { designerId: true, status: true, projectName: true, quotationExpiresAt: true, quotationWindowHours: true, referenceImage: true, createdAt: true },
     })
 
     if (!submission) {
@@ -34,11 +35,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { projectName, status, items, designerBudget } = await request.json()
+    const { projectName, status, items, designerBudget, quotationWindowHours, referenceImage } = await request.json()
 
     // Map DECLINED from frontend to REJECTED in database if any, but designers don't reject their own submissions.
     // They can transition from DRAFT to SUBMITTED.
     const targetStatus = status === 'SUBMITTED' ? 'SUBMITTED' : (status || submission.status)
+    const parsedWindowHours = quotationWindowHours === null || quotationWindowHours === undefined || quotationWindowHours === ''
+      ? submission.quotationWindowHours
+      : Number.parseInt(String(quotationWindowHours), 10)
+
+    if (targetStatus === 'SUBMITTED' && (!parsedWindowHours || Number.isNaN(parsedWindowHours) || parsedWindowHours <= 0)) {
+      return NextResponse.json({ error: 'Quotation window hours are required when submitting' }, { status: 400 })
+    }
 
     // Update quote
     const updated = await prisma.quote.update({
@@ -46,6 +54,11 @@ export async function PATCH(
       data: {
         ...(projectName && { projectName }),
         status: targetStatus,
+        ...(targetStatus === 'SUBMITTED' && {
+          quotationWindowHours: parsedWindowHours,
+          quotationExpiresAt: getQuotationExpiresAt(parsedWindowHours),
+        }),
+        ...(referenceImage !== undefined && { referenceImage: referenceImage || null }),
         designerBudget: designerBudget !== undefined ? (designerBudget ? parseFloat(designerBudget) : null) : undefined,
       },
       include: {
@@ -83,7 +96,13 @@ export async function PATCH(
       details: `Designer updated submission: ${updated.projectName} (${targetStatus})`,
     })
 
-    return NextResponse.json({ success: true, submission: updated })
+    return NextResponse.json({
+      success: true,
+      submission: {
+        ...updated,
+        quotationExpiresAt: getEffectiveQuotationExpiresAt(updated.quotationExpiresAt, updated.quotationWindowHours, updated.createdAt),
+      },
+    })
   } catch (error) {
     console.error('Designer submission PATCH error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

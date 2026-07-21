@@ -23,6 +23,9 @@ interface Submission {
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'DECLINED'
   itemsCount: number
   designerBudget?: number | null
+  quotationWindowHours?: number | null
+  quotationExpiresAt?: string | null
+  referenceImage?: string | null
   items?: Array<{
     id: string
     description: string
@@ -67,6 +70,16 @@ const ITEM_TYPES = [
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
+  if (!expiresAt) return 'No window set'
+  const remaining = new Date(expiresAt).getTime() - now
+  if (remaining <= 0) return 'Closed'
+  const totalMinutes = Math.ceil(remaining / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -137,6 +150,7 @@ function SubmissionsContent() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
+  const [now, setNow] = useState(Date.now())
 
   const fetchData = useCallback(async () => {
     try {
@@ -153,6 +167,11 @@ function SubmissionsContent() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   // Redirect to new page if navigated with open=true search param
   useEffect(() => {
@@ -227,6 +246,7 @@ function SubmissionsContent() {
                   <th>Customer</th>
                   <th>Project</th>
                   <th>Budget</th>
+                  <th>Quote Window</th>
                   <th>Items</th>
                   <th>Status</th>
                   <th>Created</th>
@@ -240,6 +260,9 @@ function SubmissionsContent() {
                     <td style={{ color: 'var(--text-secondary)' }}>{sub.projectName}</td>
                     <td style={{ fontWeight: 500, color: '#16a34a' }}>
                       {sub.designerBudget ? `₹${sub.designerBudget.toLocaleString('en-IN')}` : '-'}
+                    </td>
+                    <td style={{ fontWeight: 500, color: sub.quotationExpiresAt && new Date(sub.quotationExpiresAt).getTime() <= now ? '#b91c1c' : 'var(--text-secondary)' }}>
+                      {sub.quotationWindowHours ? `${sub.quotationWindowHours}h • ${formatTimeRemaining(sub.quotationExpiresAt, now)}` : formatTimeRemaining(sub.quotationExpiresAt, now)}
                     </td>
                     <td style={{ color: 'var(--text-muted)' }}>
                       {sub.itemsCount === 0 ? '-' : `${sub.itemsCount} items`}

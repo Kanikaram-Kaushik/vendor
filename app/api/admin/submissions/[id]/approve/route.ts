@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
+import { getEffectiveQuotationExpiresAt } from '@/lib/quote-window'
 
 const ITEM_TYPES = [
   { name: 'Tv Cabinet', code: 1 },
@@ -47,6 +48,8 @@ export async function POST(
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
     }
 
+    const quotationExpiresAt = getEffectiveQuotationExpiresAt(submission.quotationExpiresAt, submission.quotationWindowHours, submission.createdAt)
+
     const { brandIds } = await request.json()
     if (!brandIds || !Array.isArray(brandIds) || brandIds.length === 0) {
       return NextResponse.json({ error: 'At least one brand must be selected' }, { status: 400 })
@@ -67,6 +70,9 @@ export async function POST(
           projectName: submission.projectName,
           parentQuoteId: submission.id,
           status: 'SUBMITTED', // Set status to SUBMITTED so the brand sees it
+          quotationWindowHours: submission.quotationWindowHours,
+          quotationExpiresAt,
+          referenceImage: submission.referenceImage,
           designerBudget: submission.designerBudget,
         }
       })

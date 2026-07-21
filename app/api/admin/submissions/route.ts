@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { getEffectiveQuotationExpiresAt } from '@/lib/quote-window'
 
 const ITEM_TYPES = [
   { name: 'Tv Cabinet', code: 1 },
@@ -105,6 +106,8 @@ export async function GET(request: NextRequest) {
         items: sub.items,
         createdAt: sub.createdAt,
         updatedAt: sub.updatedAt,
+        quotationExpiresAt: getEffectiveQuotationExpiresAt(sub.quotationExpiresAt, sub.quotationWindowHours, sub.createdAt),
+        referenceImage: sub.referenceImage,
         brandEstimations,
       }
     })

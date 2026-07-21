@@ -21,6 +21,9 @@ interface Submission {
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'DECLINED'
   itemsCount: number
   designerBudget?: number | null
+  quotationWindowHours?: number | null
+  quotationExpiresAt?: string | null
+  referenceImage?: string | null
   items?: SubmissionItem[]
   createdAt: string
 }
@@ -28,6 +31,16 @@ interface Submission {
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
+  if (!expiresAt) return 'No window set'
+  const remaining = new Date(expiresAt).getTime() - now
+  if (remaining <= 0) return 'Closed'
+  const totalMinutes = Math.ceil(remaining / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -45,6 +58,7 @@ function SubmissionDetail({ id }: { id: string }) {
   const router = useRouter()
   const [submission, setSubmission] = useState<Submission | null>(null)
   const [loading, setLoading] = useState(true)
+  const [now, setNow] = useState(Date.now())
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -64,6 +78,11 @@ function SubmissionDetail({ id }: { id: string }) {
   useEffect(() => {
     fetchDetail()
   }, [fetchDetail])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   if (loading) {
     return (
@@ -112,12 +131,36 @@ function SubmissionDetail({ id }: { id: string }) {
             </div>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>Quotation Window</label>
+            <div style={{ fontWeight: 600, fontSize: 14, color: submission.quotationExpiresAt && new Date(submission.quotationExpiresAt).getTime() <= now ? '#b91c1c' : 'var(--text-primary)' }}>
+              {submission.quotationWindowHours ? `${submission.quotationWindowHours}h • ${formatTimeRemaining(submission.quotationExpiresAt, now)}` : formatTimeRemaining(submission.quotationExpiresAt, now)}
+            </div>
+            {submission.quotationExpiresAt && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                Closes on {new Date(submission.quotationExpiresAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              </div>
+            )}
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>Target Budget</label>
             <div style={{ fontWeight: 600, fontSize: 15, color: '#16a34a' }}>
               {submission.designerBudget ? `₹${submission.designerBudget.toLocaleString('en-IN')}` : 'No Budget Set'}
             </div>
           </div>
         </div>
+
+        {submission.referenceImage && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Reference Image
+            </div>
+            <img
+              src={submission.referenceImage}
+              alt="Reference for project"
+              style={{ width: '100%', maxWidth: 520, borderRadius: 10, border: '1px solid var(--border)', objectFit: 'cover' }}
+            />
+          </div>
+        )}
 
         {/* Submission Items List */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, backgroundColor: '#fafafa' }}>

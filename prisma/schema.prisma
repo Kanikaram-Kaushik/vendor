@@ -63,6 +63,9 @@ model Quote {
   designerId     String?
   projectName    String
   status         QuoteStatus      @default(SUBMITTED)
+  quotationWindowHours Int?
+  quotationExpiresAt DateTime?
+  referenceImage String?
   items          SubmissionItem[]
   designerBudget Float?
   parentQuoteId  String?

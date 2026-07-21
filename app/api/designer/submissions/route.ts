@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
+import { getEffectiveQuotationExpiresAt, getQuotationExpiresAt } from '@/lib/quote-window'
 
 async function getDesigner(request: NextRequest) {
   const token = request.cookies.get('designer-token')?.value
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
         itemsCount: s.items.length,
         items: s.items,
         createdAt: s.createdAt,
+        quotationExpiresAt: getEffectiveQuotationExpiresAt(s.quotationExpiresAt, s.quotationWindowHours, s.createdAt),
       })),
     })
   } catch (error) {
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectName, status, items, designerBudget } = await request.json()
+    const { projectName, status, items, designerBudget, quotationWindowHours, referenceImage } = await request.json()
 
     if (!projectName) {
       return NextResponse.json(
@@ -81,6 +83,13 @@ export async function POST(request: NextRequest) {
 
     // Default status is DRAFT unless specified otherwise
     const targetStatus = status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
+    const parsedWindowHours = quotationWindowHours === null || quotationWindowHours === undefined || quotationWindowHours === ''
+      ? null
+      : Number.parseInt(String(quotationWindowHours), 10)
+
+    if (targetStatus === 'SUBMITTED' && (!parsedWindowHours || Number.isNaN(parsedWindowHours) || parsedWindowHours <= 0)) {
+      return NextResponse.json({ error: 'Quotation window hours are required when submitting' }, { status: 400 })
+    }
 
     // Create the quote
     const submission = await prisma.quote.create({
@@ -88,6 +97,9 @@ export async function POST(request: NextRequest) {
         projectName,
         designerId: designer.id,
         status: targetStatus,
+        quotationWindowHours: targetStatus === 'SUBMITTED' ? parsedWindowHours : null,
+        quotationExpiresAt: targetStatus === 'SUBMITTED' ? getQuotationExpiresAt(parsedWindowHours) : null,
+        referenceImage: referenceImage || null,
         designerBudget: designerBudget ? parseFloat(designerBudget) : null,
         ...(items && items.length > 0 && {
           items: {
@@ -126,6 +138,9 @@ export async function POST(request: NextRequest) {
         status: submission.status,
         itemsCount: submission.items.length,
         createdAt: submission.createdAt,
+        quotationWindowHours: submission.quotationWindowHours,
+        quotationExpiresAt: submission.quotationExpiresAt,
+        referenceImage: submission.referenceImage,
       },
     })
   } catch (error) {

@@ -39,6 +39,9 @@ export default function NewSubmissionPage() {
   const router = useRouter()
   const [projectName, setProjectName] = useState('')
   const [designerBudget, setDesignerBudget] = useState('')
+  const [quotationWindowHours, setQuotationWindowHours] = useState('')
+  const [referenceImage, setReferenceImage] = useState('')
+  const [referenceImageName, setReferenceImageName] = useState('')
   const [items, setItems] = useState<SubmissionItem[]>([])
   
   // Item detail fields
@@ -53,6 +56,30 @@ export default function NewSubmissionPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  function handleReferenceImageChange(file: File | null) {
+    if (!file) {
+      setReferenceImage('')
+      setReferenceImageName('')
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file for the reference image.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setReferenceImage(typeof reader.result === 'string' ? reader.result : '')
+      setReferenceImageName(file.name)
+      setError('')
+    }
+    reader.onerror = () => {
+      setError('Failed to read the selected image.')
+    }
+    reader.readAsDataURL(file)
+  }
 
   function addItem() {
     if (!width || Number(width) <= 0 || !length || Number(length) <= 0) {
@@ -99,6 +126,13 @@ export default function NewSubmissionPage() {
       setError('Please add at least one item.')
       return
     }
+    if (!asDraft) {
+      const parsedHours = Number(quotationWindowHours)
+      if (!quotationWindowHours || Number.isNaN(parsedHours) || parsedHours <= 0) {
+        setError('Please set a quotation window in hours.')
+        return
+      }
+    }
     setError('')
     setLoading(true)
 
@@ -110,6 +144,8 @@ export default function NewSubmissionPage() {
           projectName,
           designerBudget: designerBudget ? parseFloat(designerBudget) : null,
           status: asDraft ? 'DRAFT' : 'SUBMITTED',
+          quotationWindowHours: quotationWindowHours ? parseInt(quotationWindowHours, 10) : null,
+          referenceImage: referenceImage || null,
           items,
         }),
       })
@@ -147,6 +183,59 @@ export default function NewSubmissionPage() {
             <label className="form-label">Target Budget (₹)</label>
             <input type="number" className="form-input" value={designerBudget} onChange={(e) => setDesignerBudget(e.target.value)} placeholder="e.g. 500000" />
           </div>
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 20, maxWidth: 280 }}>
+          <label className="form-label">Quotation Window (Hours)</label>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            className="form-input"
+            value={quotationWindowHours}
+            onChange={(e) => setQuotationWindowHours(e.target.value)}
+            placeholder="e.g. 4"
+          />
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+            Required when you submit the project for vendors.
+          </div>
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 20 }}>
+          <label className="form-label">Reference Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            className="form-input"
+            onChange={(e) => handleReferenceImageChange(e.target.files?.[0] || null)}
+          />
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+            Add a visual reference for how the finished project should look.
+          </div>
+          {referenceImageName && (
+            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+              Selected file: {referenceImageName}
+            </div>
+          )}
+          {referenceImage && (
+            <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <img
+                src={referenceImage}
+                alt="Reference preview"
+                style={{ width: 220, maxWidth: '100%', borderRadius: 8, border: '1px solid var(--border)', objectFit: 'cover' }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setReferenceImage('')
+                  setReferenceImageName('')
+                }}
+              >
+                Remove Image
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Add Submission Item Form */}

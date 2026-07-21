@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { getEffectiveQuotationExpiresAt, isQuotationWindowClosed } from '@/lib/quote-window'
 
 async function getVendor(request: NextRequest) {
   const token = request.cookies.get('vendor-token')?.value
@@ -38,6 +39,10 @@ export async function GET(request: NextRequest) {
         itemsCount: q.items.length,
         items: q.items,
         createdAt: q.createdAt,
+        quotationWindowHours: q.quotationWindowHours,
+        quotationExpiresAt: getEffectiveQuotationExpiresAt(q.quotationExpiresAt, q.quotationWindowHours, q.createdAt),
+        isQuotationClosed: isQuotationWindowClosed(q.quotationExpiresAt, q.quotationWindowHours, q.createdAt),
+        referenceImage: q.referenceImage,
       })),
     })
   } catch (error) {
