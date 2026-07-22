@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { QuoteStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
 import { getEffectiveQuotationExpiresAt, getQuotationExpiresAt } from '@/lib/quote-window'
+
+interface SubmissionItemInput {
+  description: string
+  quantity?: number
+  notes?: string
+  itemType?: string | null
+  hardware?: string | null
+  coreMaterial?: string | null
+  externalFinish?: string | null
+  sft?: number | string | null
+  image?: string | null
+}
 
 async function getDesigner(request: NextRequest) {
   const token = request.cookies.get('designer-token')?.value
@@ -21,12 +34,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') // ALL, DRAFT, SUBMITTED, APPROVED, DECLINED
 
-    let dbStatus: any = undefined
+    let dbStatus: QuoteStatus | undefined = undefined
     if (status && status !== 'ALL') {
       if (status === 'DECLINED') {
         dbStatus = 'REJECTED'
-      } else {
-        dbStatus = status
+      } else if (Object.values(QuoteStatus).includes(status as QuoteStatus)) {
+        dbStatus = status as QuoteStatus
       }
     }
 
@@ -103,7 +116,7 @@ export async function POST(request: NextRequest) {
         designerBudget: designerBudget ? parseFloat(designerBudget) : null,
         ...(items && items.length > 0 && {
           items: {
-            create: items.map((item: any) => ({
+            create: (items as SubmissionItemInput[]).map((item) => ({
               description: item.description,
               quantity: item.quantity || 1,
               notes: item.notes || '',
@@ -111,7 +124,8 @@ export async function POST(request: NextRequest) {
               hardware: item.hardware || null,
               coreMaterial: item.coreMaterial || null,
               externalFinish: item.externalFinish || null,
-              sft: item.sft ? parseFloat(item.sft) : null,
+              sft: item.sft != null ? parseFloat(String(item.sft)) : null,
+              image: item.image || null,
             })),
           },
         }),

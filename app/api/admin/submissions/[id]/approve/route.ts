@@ -107,6 +107,7 @@ export async function POST(
           coreMaterial: item.coreMaterial,
           externalFinish: item.externalFinish,
           sft: item.sft,
+          image: item.image,
           pricePerSft: estimatedPrice, // Pre-fill price from matrix!
         }
       })

@@ -90,6 +90,7 @@ model SubmissionItem {
   coreMaterial   String?
   externalFinish String?
   sft            Float?
+  image          String?
   createdAt      DateTime @default(now())
 
   @@map("submission_items")

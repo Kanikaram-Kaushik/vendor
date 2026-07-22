@@ -12,6 +12,8 @@ interface SubmissionItem {
   externalFinish?: string
   sft?: number
   notes?: string
+  image?: string
+  imageName?: string
 }
 
 const HARDWARES = ['EBCO', 'HETTICH', 'HAFELE']
@@ -53,6 +55,8 @@ export default function NewSubmissionPage() {
   const [length, setLength] = useState<number | ''>(2)
   const [qty, setQty] = useState(1)
   const [itemNotes, setItemNotes] = useState('')
+  const [itemImage, setItemImage] = useState('')
+  const [itemImageName, setItemImageName] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -105,12 +109,37 @@ export default function NewSubmissionPage() {
         hardware,
         sft: sftVal,
         notes: itemNotes,
+        image: itemImage || undefined,
+        imageName: itemImageName || undefined,
       },
     ])
     setItemNotes('')
     setQty(1)
     setWidth(5)
     setLength(2)
+    setItemImage('')
+    setItemImageName('')
+  }
+
+  function handleItemImageChange(file: File | null) {
+    if (!file) {
+      setItemImage('')
+      setItemImageName('')
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file for the item.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setItemImage(typeof reader.result === 'string' ? reader.result : '')
+      setItemImageName(file.name)
+      setError('')
+    }
+    reader.onerror = () => setError('Failed to read the selected item image.')
+    reader.readAsDataURL(file)
   }
 
   function removeItem(index: number) {
@@ -299,6 +328,12 @@ export default function NewSubmissionPage() {
               + Add Item Spec
             </button>
           </div>
+
+          <div style={{ marginTop: 12 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Unit Image (Optional)</label>
+            <input type="file" accept="image/*" className="form-input" onChange={(e) => handleItemImageChange(e.target.files?.[0] || null)} />
+            {itemImageName && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-secondary)' }}>Selected: {itemImageName}</div>}
+          </div>
         </div>
 
         {/* Current Items List */}
@@ -313,6 +348,7 @@ export default function NewSubmissionPage() {
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                       Size: {item.sft} SFT | Qty: {item.quantity} {item.notes && `| Note: ${item.notes}`}
                     </div>
+                    {item.image && <img src={item.image} alt={`${item.itemType || 'Submission'} reference`} style={{ width: 96, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
                   </div>
                   <button type="button" style={{ color: '#dc2626', fontWeight: 600, padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => removeItem(idx)}>Remove</button>
                 </div>

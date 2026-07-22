@@ -112,7 +112,7 @@ function UserModal({ user, onClose, onSave }: UserModalProps) {
           </div>
           <div className="form-group">
             <label className="form-label">Role</label>
-            <select className="form-select" value={role} onChange={e => setRole(e.target.value as any)}>
+            <select className="form-select" value={role} onChange={e => setRole(e.target.value as 'ADMIN' | 'DESIGNER')}>
               <option value="ADMIN">Admin</option>
               <option value="DESIGNER">Designer</option>
             </select>

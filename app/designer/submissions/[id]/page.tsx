@@ -58,14 +58,14 @@ function SubmissionDetail({ id }: { id: string }) {
   const router = useRouter()
   const [submission, setSubmission] = useState<Submission | null>(null)
   const [loading, setLoading] = useState(true)
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(0)
 
   const fetchDetail = useCallback(async () => {
     try {
       const res = await fetch('/api/designer/submissions')
       if (res.ok) {
         const data = await res.json()
-        const found = (data.submissions || []).find((s: any) => s.id === id)
+        const found = (data.submissions || []).find((s: Submission) => s.id === id)
         setSubmission(found || null)
       }
     } catch (err) {
@@ -80,6 +80,7 @@ function SubmissionDetail({ id }: { id: string }) {
   }, [fetchDetail])
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])

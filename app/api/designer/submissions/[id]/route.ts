@@ -4,6 +4,18 @@ import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
 import { getEffectiveQuotationExpiresAt, getQuotationExpiresAt } from '@/lib/quote-window'
 
+interface SubmissionItemInput {
+  description: string
+  quantity?: number
+  notes?: string
+  itemType?: string | null
+  hardware?: string | null
+  coreMaterial?: string | null
+  externalFinish?: string | null
+  sft?: number | string | null
+  image?: string | null
+}
+
 async function getDesigner(request: NextRequest) {
   const token = request.cookies.get('designer-token')?.value
   if (!token) return null
@@ -73,7 +85,7 @@ export async function PATCH(
       // Create new ones
       if (items.length > 0) {
         await prisma.submissionItem.createMany({
-          data: items.map((item: any) => ({
+          data: (items as SubmissionItemInput[]).map((item) => ({
             quoteId: id,
             description: item.description,
             quantity: item.quantity || 1,
@@ -82,7 +94,8 @@ export async function PATCH(
             hardware: item.hardware || null,
             coreMaterial: item.coreMaterial || null,
             externalFinish: item.externalFinish || null,
-            sft: item.sft ? parseFloat(item.sft) : null,
+            sft: item.sft != null ? parseFloat(String(item.sft)) : null,
+            image: item.image || null,
           })),
         })
       }

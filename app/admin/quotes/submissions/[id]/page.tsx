@@ -19,6 +19,7 @@ interface SubmissionItem {
   coreMaterial: string | null
   externalFinish: string | null
   sft: number | null
+  image: string | null
 }
 
 interface DesignerSubmission {
@@ -62,13 +63,13 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       const res = await fetch('/api/admin/submissions')
       if (res.ok) {
         const data = await res.json()
-        const found = (data.submissions || []).find((s: any) => s.id === id)
+        const found = (data.submissions || []).find((s: DesignerSubmission) => s.id === id)
         if (found) {
           setSubmission(found)
           // Pre-select brands that are complete and within budget
           const recommended = found.brandEstimations
-            .filter((b: any) => b.isComplete && b.totalCost !== null && found.designerBudget && b.totalCost <= found.designerBudget)
-            .map((b: any) => b.brandId)
+            .filter((b: BrandEstimation) => b.isComplete && b.totalCost !== null && found.designerBudget && b.totalCost <= found.designerBudget)
+            .map((b: BrandEstimation) => b.brandId)
           setSelectedBrands(recommended)
         }
       }
@@ -178,9 +179,12 @@ function ReviewDistributeDetail({ id }: { id: string }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {submission.items.map((item, idx) => (
-              <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #eef2f6', paddingBottom: 6 }}>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.description}</span>
-                <span style={{ color: 'var(--text-secondary)' }}>{item.sft} SFT × Qty {item.quantity}</span>
+              <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #eef2f6', paddingBottom: 10, gap: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.description}</div>
+                  {item.image && <img src={item.image} alt={`${item.itemType || 'Submission'} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
+                </div>
+                <span style={{ color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{item.sft} SFT × Qty {item.quantity}</span>
               </div>
             ))}
           </div>

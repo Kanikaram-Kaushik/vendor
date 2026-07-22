@@ -150,7 +150,7 @@ function SubmissionsContent() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(0)
 
   const fetchData = useCallback(async () => {
     try {
@@ -169,6 +169,7 @@ function SubmissionsContent() {
   }, [fetchData])
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])

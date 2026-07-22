@@ -115,6 +115,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Process bulk upsert inside transaction
+    interface MatrixCellInput {
+      code: number
+      hardware: string
+      coreMaterial: string
+      externalFinish: string
+      price: number | string
+    }
+
     await prisma.$transaction(async (tx) => {
       // 1. Delete all existing pricing matrix cells for this brand
       await tx.pricingMatrixCell.deleteMany({
@@ -124,13 +132,13 @@ export async function PATCH(request: NextRequest) {
       // 2. Insert new ones
       if (cells.length > 0) {
         await tx.pricingMatrixCell.createMany({
-          data: cells.map((cell: any) => ({
+          data: (cells as MatrixCellInput[]).map((cell) => ({
             brandId: vendor.id,
             code: Number(cell.code),
             hardware: cell.hardware,
             coreMaterial: cell.coreMaterial,
             externalFinish: cell.externalFinish,
-            price: parseFloat(cell.price) || 0
+            price: parseFloat(String(cell.price)) || 0
           }))
         })
       }

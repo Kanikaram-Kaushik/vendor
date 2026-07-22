@@ -55,7 +55,7 @@ function QuotationDetail({ id }: { id: string }) {
       const res = await fetch('/api/designer/quotations')
       if (res.ok) {
         const data = await res.json()
-        const found = (data.quotations || []).find((q: any) => q.id === id)
+        const found = (data.quotations || []).find((q: Quotation) => q.id === id)
         setQuotation(found || null)
       }
     } catch (err) {
@@ -71,7 +71,6 @@ function QuotationDetail({ id }: { id: string }) {
 
   async function handleApprove() {
     if (!quotation) return
-    if (!confirm(`Are you sure you want to select ${quotation.brandName} for this project? All other brand bids will be rejected.`)) return
     setActionLoading(true)
     setError('')
     try {

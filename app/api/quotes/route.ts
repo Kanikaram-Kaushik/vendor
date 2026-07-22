@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { QuoteStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog } from '@/lib/audit'
 import { verifyToken } from '@/lib/auth'
+
+const QUOTE_STATUSES = new Set<string>(Object.values(QuoteStatus))
 
 async function getAdmin(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value
@@ -18,7 +21,7 @@ export async function GET(request: NextRequest) {
     const quotes = await prisma.quote.findMany({
       where: {
         brandId: { not: null },
-        ...(status && { status: status as any }),
+        ...(status && QUOTE_STATUSES.has(status) ? { status: status as QuoteStatus } : {}),
       },
       orderBy: { createdAt: 'desc' },
       include: { brand: { select: { name: true, email: true } } },

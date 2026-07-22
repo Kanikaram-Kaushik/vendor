@@ -73,7 +73,7 @@ export default function DesignerDashboard() {
     return (
       <div>
         <div className="page-header">
-          <h1 className="page-title">Designer's Portal</h1>
+          <h1 className="page-title">Designer&apos;s Portal</h1>
           <p className="page-subtitle">Welcome back!</p>
         </div>
         <div className="page-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
@@ -95,7 +95,7 @@ export default function DesignerDashboard() {
       <div className="page-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 className="page-title">Designer's Portal</h1>
+            <h1 className="page-title">Designer&apos;s Portal</h1>
             <p className="page-subtitle">Welcome back!</p>
           </div>
           <span className="realtime-dot">

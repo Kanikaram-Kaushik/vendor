@@ -196,7 +196,7 @@ export default function VendorProfilePage() {
           <div className="card-header" style={{ background: '#fafafa' }}>
             <div>
               <span className="card-title" style={{ fontSize: 14, fontWeight: 600 }}>Brand Identity</span>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Your brand's core details and identity visible to platform users.</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Your brand&apos;s core details and identity visible to platform users.</div>
             </div>
           </div>
           <div className="card-body" style={{ padding: 24 }}>

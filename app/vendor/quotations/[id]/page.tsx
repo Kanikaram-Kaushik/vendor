@@ -14,6 +14,7 @@ interface QuoteItem {
   coreMaterial?: string | null
   externalFinish?: string | null
   sft?: number | null
+  image?: string | null
 }
 
 interface Quote {
@@ -79,6 +80,14 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={cls[status] || 'badge badge-pending'}>{status.charAt(0) + status.slice(1).toLowerCase()}</span>
 }
 
+interface MatrixCell {
+  code: number
+  hardware: string
+  coreMaterial: string
+  externalFinish: string
+  price: number
+}
+
 function QuoteDetail({ id }: { id: string }) {
   const router = useRouter()
   const [quote, setQuote] = useState<Quote | null>(null)
@@ -86,8 +95,8 @@ function QuoteDetail({ id }: { id: string }) {
   const [actionLoading, setActionLoading] = useState(false)
   const [prices, setPrices] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
-  const [matrixCells, setMatrixCells] = useState<any[]>([])
-  const [now, setNow] = useState(Date.now())
+  const [matrixCells, setMatrixCells] = useState<MatrixCell[]>([])
+  const [now, setNow] = useState(0)
 
   // Lookup state per item
   const [lookupItemId, setLookupItemId] = useState<string | null>(null)
@@ -117,11 +126,11 @@ function QuoteDetail({ id }: { id: string }) {
       const res = await fetch('/api/vendor/quotes')
       if (res.ok) {
         const data = await res.json()
-        const found = (data.quotes || []).find((q: any) => q.id === id)
+        const found = (data.quotes || []).find((q: Quote) => q.id === id)
         if (found) {
           setQuote(found)
           const initial: Record<string, string> = {}
-          found.items?.forEach((item: any) => {
+          found.items?.forEach((item: QuoteItem) => {
             initial[item.id] = item.pricePerSft !== null && item.pricePerSft !== undefined ? String(item.pricePerSft) : ''
           })
           setPrices(initial)
@@ -139,6 +148,7 @@ function QuoteDetail({ id }: { id: string }) {
   }, [fetchDetail])
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
@@ -296,6 +306,7 @@ function QuoteDetail({ id }: { id: string }) {
                           {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
                         </div>
                         {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+                        {item.image && <img src={item.image} alt={`${item.itemType || 'Submission'} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {isEditable && (

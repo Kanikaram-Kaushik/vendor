@@ -61,7 +61,7 @@ export default function VendorQuotationsPage() {
   const router = useRouter()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(0)
 
   const fetchQuotes = useCallback(async () => {
     try {
@@ -82,6 +82,7 @@ export default function VendorQuotationsPage() {
   }, [fetchQuotes])
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
