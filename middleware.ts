@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes
-  if (pathname === '/login' || pathname === '/designer/login' || pathname === '/vendor/login' || pathname === '/') {
+  if (pathname === '/login' || pathname === '/customer/login' || pathname === '/designer/login' || pathname === '/vendor/login' || pathname === '/') {
     return NextResponse.next()
   }
 
@@ -86,5 +86,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/designer/:path*', '/vendor/:path*', '/login', '/designer/login', '/vendor/login'],
+  matcher: ['/admin/:path*', '/designer/:path*', '/vendor/:path*', '/login', '/customer/login', '/designer/login', '/vendor/login'],
 }

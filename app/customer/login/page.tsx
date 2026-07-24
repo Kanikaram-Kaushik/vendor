@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function LoginPage() {
+export default function CustomerLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,11 +31,7 @@ export default function LoginPage() {
         return
       }
 
-      if (data.redirect) {
-        router.push(data.redirect)
-      } else {
-        router.push('/admin/overview')
-      }
+      router.push(data.redirect || '/vendor/quotations')
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)
@@ -54,8 +50,8 @@ export default function LoginPage() {
           <span className="login-logo-text">DesignBHK</span>
         </div>
 
-        <h1 className="login-title">Welcome back</h1>
-        <p className="login-subtitle">Sign in to your account</p>
+        <h1 className="login-title">Customer login</h1>
+        <p className="login-subtitle">Sign in to access your quotation portal</p>
 
         {error && <div className="login-error">{error}</div>}
 
@@ -89,7 +85,7 @@ export default function LoginPage() {
           </div>
 
           <button
-            id="login-submit"
+            id="customer-login-submit"
             type="submit"
             className="login-btn"
             disabled={loading}
@@ -100,13 +96,10 @@ export default function LoginPage() {
 
         <div style={{ marginTop: 20, textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: '#999' }}>
-            Portal access for Admins, Designers, Vendors & Customers.
+            Need the admin, designer, or vendor portal?
           </p>
-          <Link
-            href="/customer/login"
-            style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 600, color: '#111' }}
-          >
-            Customer login
+          <Link href="/login" style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 600, color: '#111' }}>
+            Back to main login
           </Link>
         </div>
       </div>
