@@ -9,6 +9,7 @@ export async function POST() {
     await prisma.auditLog.deleteMany()
     await prisma.quote.deleteMany()
     await prisma.brand.deleteMany()
+    await prisma.customer.deleteMany()
     await prisma.user.deleteMany()
 
     // Create users (admins + designers)
@@ -75,6 +76,16 @@ export async function POST() {
       ],
     })
 
+    // Create customers
+    const customerPassword = await bcrypt.hash('customer123', 12)
+    await prisma.customer.create({
+      data: {
+        name: 'Demo Customer',
+        email: 'demo.customer@designbhk.com',
+        password: customerPassword,
+      },
+    })
+
     // Create quotes
     await prisma.quote.createMany({
       data: [
@@ -105,6 +116,7 @@ export async function POST() {
         admin: { email: 'admin@designbhk.com', password: 'admin123' },
         designer: { email: 'designer@test.com', password: 'designer123' },
         brand: { email: 'b1@gmail.com', password: 'brand123' },
+        customer: { email: 'demo.customer@designbhk.com', password: 'customer123' },
       },
     })
   } catch (error) {

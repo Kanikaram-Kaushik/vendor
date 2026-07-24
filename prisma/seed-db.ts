@@ -18,6 +18,7 @@ async function main() {
   await prisma.auditLog.deleteMany()
   await prisma.quote.deleteMany()
   await prisma.brand.deleteMany()
+  await prisma.customer.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('Seeding users...')
@@ -82,6 +83,16 @@ async function main() {
       { name: 'Brand4', email: 'brand@test.com', phone: '9876543213', password: brandPassword, status: 'ACTIVE' },
       { name: 'Brand5', email: 'b5@gmail.com', phone: '9876543214', password: brandPassword, status: 'ACTIVE' },
     ],
+  })
+
+  console.log('Seeding customers...')
+  const customerPassword = await bcrypt.hash('customer123', 12)
+  await prisma.customer.create({
+    data: {
+      name: 'Demo Customer',
+      email: 'demo.customer@designbhk.com',
+      password: customerPassword,
+    },
   })
 
   console.log('Seeding quotes...')

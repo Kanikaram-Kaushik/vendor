@@ -17,7 +17,7 @@ export default function CustomerLoginPage() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/customer/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -31,7 +31,7 @@ export default function CustomerLoginPage() {
         return
       }
 
-      router.push(data.redirect || '/vendor/quotations')
+      router.push(data.redirect || '/customer/dashboard')
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)
@@ -93,6 +93,18 @@ export default function CustomerLoginPage() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <button
+          type="button"
+          className="login-btn"
+          style={{ marginTop: 12, background: '#f3f3f3', color: '#111' }}
+          onClick={() => {
+            setEmail('demo.customer@designbhk.com')
+            setPassword('customer123')
+          }}
+        >
+          Fill demo credentials
+        </button>
 
         <div style={{ marginTop: 20, textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: '#999' }}>

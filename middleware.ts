@@ -10,6 +10,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  if (pathname.startsWith('/customer')) {
+    const token = request.cookies.get('customer-token')?.value
+
+    if (!token) {
+      return NextResponse.redirect(new URL('/customer/login', request.url))
+    }
+
+    const payload = await verifyToken(token)
+
+    if (!payload) {
+      const response = NextResponse.redirect(new URL('/customer/login', request.url))
+      response.cookies.delete('customer-token')
+      return response
+    }
+
+    if (payload.role !== 'CUSTOMER') {
+      return NextResponse.redirect(new URL('/customer/login', request.url))
+    }
+
+    return NextResponse.next()
+  }
+
   // Protect /admin routes
   if (pathname.startsWith('/admin')) {
     const token = request.cookies.get('auth-token')?.value

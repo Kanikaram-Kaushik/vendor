@@ -55,6 +55,17 @@ model Brand {
   @@map("brands")
 }
 
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("customers")
+}
+
 model Quote {
   id             String           @id @default(cuid())
   brand          Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
