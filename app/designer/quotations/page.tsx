@@ -66,6 +66,20 @@ export default function DesignerQuotationsPage() {
     fetchData()
   }, [fetchData])
 
+  // Group quotations by parent project / submission
+  const groupedProjects = quotations.reduce((acc, q) => {
+    const key = q.parentQuoteId || q.projectName
+    if (!acc[key]) {
+      acc[key] = {
+        projectName: q.projectName,
+        designerBudget: q.designerBudget,
+        quotes: [],
+      }
+    }
+    acc[key].quotes.push(q)
+    return acc
+  }, {} as Record<string, { projectName: string; designerBudget?: number | null; quotes: Quotation[] }>)
+
   return (
     <div>
       <div className="page-header">
@@ -74,75 +88,87 @@ export default function DesignerQuotationsPage() {
       </div>
 
       <div className="page-body">
-        <div className="table-wrap">
-          <div className="table-toolbar">
-            <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Offers from Brands
-            </span>
-          </div>
-
-          {loading ? (
+        {loading ? (
+          <div className="table-wrap">
             <div className="empty-state"><div className="empty-state-text">Loading quotations…</div></div>
-          ) : quotations.length === 0 ? (
+          </div>
+        ) : quotations.length === 0 ? (
+          <div className="table-wrap">
             <div className="empty-state">
               <div className="empty-state-icon">📋</div>
               <div className="empty-state-text">No quotations received yet</div>
               <div className="empty-state-sub">Brand bids will appear here once Admin distributes your submissions</div>
             </div>
-          ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Project Name</th>
-                  <th>Brand Name</th>
-                  <th>Budget</th>
-                  <th>Bid Total</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quotations.map((q) => {
-                  const budgetExceeded = q.totalPrice && q.designerBudget && q.totalPrice > q.designerBudget
-                  return (
-                    <tr key={q.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/designer/quotations/${q.id}`)}>
-                      <td style={{ fontWeight: 600 }}>{q.projectName}</td>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{q.brandName}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{q.brandEmail}</div>
-                      </td>
-                      <td style={{ color: 'var(--text-muted)' }}>
-                        {q.designerBudget ? `₹${q.designerBudget.toLocaleString('en-IN')}` : '-'}
-                      </td>
-                      <td>
-                        {q.totalPrice !== null ? (
-                          <div style={{ fontWeight: 600, color: budgetExceeded ? '#dc2626' : '#16a34a' }}>
-                            ₹{q.totalPrice.toLocaleString('en-IN')}
-                            {budgetExceeded && <span style={{ fontSize: 10, display: 'block', fontWeight: 500 }}>(Over Budget)</span>}
-                          </div>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)', fontSize: 12.5 }}>Pricing Pending</span>
-                        )}
-                      </td>
-                      <td>
-                        <StatusBadge status={q.status} />
-                      </td>
-                      <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: '6px 12px', fontSize: 12 }}
-                          onClick={() => router.push(`/designer/quotations/${q.id}`)}
-                        >
-                          View & Action
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+          </div>
+        ) : (
+          Object.entries(groupedProjects).map(([key, group]) => (
+            <div className="table-wrap" key={key} style={{ marginBottom: 24 }}>
+              <div className="table-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                <div>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    📁 Project: {group.projectName}
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', marginLeft: 12 }}>
+                    ({group.quotes.length} Brand Quote{group.quotes.length > 1 ? 's' : ''})
+                  </span>
+                </div>
+                {group.designerBudget && (
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>
+                    Target Budget: ₹{group.designerBudget.toLocaleString('en-IN')}
+                  </div>
+                )}
+              </div>
+
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Brand Name</th>
+                    <th>Bid Total</th>
+                    <th>Status</th>
+                    <th>Date Received</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.quotes.map((q) => {
+                    const budgetExceeded = q.totalPrice && q.designerBudget && q.totalPrice > q.designerBudget
+                    return (
+                      <tr key={q.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/designer/quotations/${q.id}`)}>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{q.brandName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{q.brandEmail}</div>
+                        </td>
+                        <td>
+                          {q.totalPrice !== null ? (
+                            <div style={{ fontWeight: 600, color: budgetExceeded ? '#dc2626' : '#16a34a' }}>
+                              ₹{q.totalPrice.toLocaleString('en-IN')}
+                              {budgetExceeded && <span style={{ fontSize: 10, display: 'block', fontWeight: 500 }}>(Over Budget)</span>}
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: 12.5 }}>Pricing Pending</span>
+                          )}
+                        </td>
+                        <td>
+                          <StatusBadge status={q.status} />
+                        </td>
+                        <td style={{ color: 'var(--text-muted)' }}>{formatDate(q.createdAt)}</td>
+                        <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: 12 }}
+                            onClick={() => router.push(`/designer/quotations/${q.id}`)}
+                          >
+                            View & Action
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

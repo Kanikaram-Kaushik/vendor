@@ -134,6 +134,16 @@ export default function QuotesPage() {
     return matchSearch && matchStatus
   })
 
+  // Group quotes by project name or parent submission
+  const groupedBrandQuotes = filteredQuotes.reduce((acc, q) => {
+    const key = q.projectName || 'Unassigned Project'
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(q)
+    return acc
+  }, {} as Record<string, BrandQuote[]>)
+
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -240,8 +250,8 @@ export default function QuotesPage() {
             )}
           </div>
         ) : (
-          <div className="table-wrap">
-            <div className="table-toolbar">
+          <div>
+            <div className="table-toolbar" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div className="filter-bar">
                 {['ALL', 'SUBMITTED', 'APPROVED', 'REJECTED', 'ACTIVE'].map((f) => (
                   <button
@@ -254,7 +264,7 @@ export default function QuotesPage() {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   className="search-input"
                   placeholder="Search quotes…"
@@ -269,54 +279,73 @@ export default function QuotesPage() {
             </div>
 
             {quotesLoading ? (
-              <div className="empty-state"><div className="empty-state-text">Loading quotes…</div></div>
+              <div className="table-wrap">
+                <div className="empty-state"><div className="empty-state-text">Loading quotes…</div></div>
+              </div>
             ) : filteredQuotes.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">📋</div>
-                <div className="empty-state-text">No brand quotes found</div>
+              <div className="table-wrap">
+                <div className="empty-state">
+                  <div className="empty-state-icon">📋</div>
+                  <div className="empty-state-text">No brand quotes found</div>
+                </div>
               </div>
             ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Brand</th>
-                    <th>Project Name</th>
-                    <th>Status</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredQuotes.map((quote) => (
-                    <tr key={quote.id}>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{quote.brandName}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{quote.brandEmail}</div>
-                      </td>
-                      <td>{quote.projectName}</td>
-                      <td><StatusBadge status={quote.status} /></td>
-                      <td style={{ color: 'var(--text-muted)' }}>{formatDate(quote.createdAt)}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          {quote.status !== 'APPROVED' && (
-                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => handleStatusChange(quote.id, 'APPROVED')}>
-                              Approve
-                            </button>
-                          )}
-                          {quote.status !== 'REJECTED' && (
-                            <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => handleStatusChange(quote.id, 'REJECTED')}>
-                              Reject
-                            </button>
-                          )}
-                          <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => handleDeleteQuote(quote.id)}>
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              Object.entries(groupedBrandQuotes).map(([projectName, groupQuotes]) => (
+                <div className="table-wrap" key={projectName} style={{ marginBottom: 20 }}>
+                  <div className="table-toolbar" style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+                      📁 Project: {projectName}
+                    </span>
+                    <span style={{ fontSize: 12.5, color: 'var(--text-muted)', marginLeft: 8 }}>
+                      ({groupQuotes.length} Brand Quote{groupQuotes.length > 1 ? 's' : ''})
+                    </span>
+                  </div>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Brand</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th style={{ textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {groupQuotes.map((quote) => (
+                        <tr key={quote.id}>
+                          <td>
+                            <div style={{ fontWeight: 500 }}>{quote.brandName}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{quote.brandEmail}</div>
+                          </td>
+                          <td><StatusBadge status={quote.status} /></td>
+                          <td style={{ color: 'var(--text-muted)' }}>{formatDate(quote.createdAt)}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                              <select
+                                className="form-select"
+                                style={{ width: 'auto', padding: '4px 8px', fontSize: 12 }}
+                                value={quote.status}
+                                onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                              >
+                                <option value="SUBMITTED">Submitted</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                                <option value="ACTIVE">Active</option>
+                              </select>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: '4px 8px', fontSize: 12, color: '#dc2626' }}
+                                onClick={() => handleDeleteQuote(quote.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))
             )}
           </div>
         )}
