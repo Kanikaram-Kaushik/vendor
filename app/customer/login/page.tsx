@@ -39,7 +39,11 @@ export default function CustomerLoginPage() {
         return
       }
 
-      router.push(data.redirect || '/customer/dashboard')
+      if (data.redirect && data.redirect.startsWith('http')) {
+        window.location.href = data.redirect
+      } else {
+        router.push(data.redirect || '/customer/dashboard')
+      }
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)

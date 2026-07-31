@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         email: customer.email,
         role: 'CUSTOMER',
       },
-      redirect: '/customer/dashboard',
+      redirect: process.env.NEXT_PUBLIC_WEBSITE_URL || 'http://localhost:3000',
     })
 
     response.cookies.set('customer-token', token, {
