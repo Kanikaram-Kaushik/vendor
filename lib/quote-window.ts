@@ -15,11 +15,24 @@ export function parseQuotationDeadline(value: Date | string | null | undefined) 
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-/** Deadline rendered as dd:mm:yyyy HH:MM:SS. */
+/** Deadline rendered as DD/MM/YYYY, hh:mm:ss AM/PM. */
 export function formatQuotationDeadline(value: Date | string | null | undefined) {
   const d = parseQuotationDeadline(value)
   if (!d) return 'No deadline set'
-  return `${pad(d.getDate())}:${pad(d.getMonth() + 1)}:${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  const day = pad(d.getDate())
+  const month = pad(d.getMonth() + 1)
+  const year = d.getFullYear()
+  
+  let hours = d.getHours()
+  const ampm = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12
+  hours = hours ? hours : 12 // 0 becomes 12
+  
+  const formattedHours = pad(hours)
+  const minutes = pad(d.getMinutes())
+  const seconds = pad(d.getSeconds())
+
+  return `${day}/${month}/${year}, ${formattedHours}:${minutes}:${seconds} ${ampm}`
 }
 
 /** Value for an `<input type="datetime-local" step="1">` field. */
