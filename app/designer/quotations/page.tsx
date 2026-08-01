@@ -14,6 +14,7 @@ interface QuotationItem {
 
 interface Quotation {
   id: string
+  parentQuoteId?: string | null
   brandId: string
   brandName: string
   brandEmail: string
