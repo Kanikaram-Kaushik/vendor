@@ -20,23 +20,25 @@ interface SubmissionItem {
 const HARDWARES = ['EBCO', 'HETTICH', 'HAFELE']
 const CORES = ['MR Ply', 'BWP Ply', 'HDHMR']
 const FINISHES = ['Laminate', 'Acrylic', 'PU']
-const ITEM_TYPES = [
-  'Tv Cabinet',
-  'Crockery Unit',
-  'Puja Unit',
-  'Partition',
-  'Wardrobe',
-  'Tv Unit',
-  'Study Unit',
-  'Bed',
-  'Bedside Table',
-  'Dressing Unit',
-  'Base Unit (Kitchen)',
-  'Wall Unit (Kitchen)',
-  'Loft',
-  'Tall units (Kitchen)',
-  'Shoerack'
-]
+const ITEM_DESCRIPTIONS: Record<string, string> = {
+  'Tv Cabinet': 'Storage or media unit for TV and entertainment equipment with cable management.',
+  'Crockery Unit': 'Glass or solid door display cabinet for dining area tableware and glassware.',
+  'Puja Unit': 'Sacred shrine unit designed for daily prayers, brass items, and idols.',
+  'Partition': 'Divider screen or open shelving unit to create visual zones in living/dining areas.',
+  'Wardrobe': 'Bedroom clothing storage unit with hanging rods, drawers, and shelves.',
+  'Tv Unit': 'Wall-mounted or standing bedroom/living room TV backdrop panel and console.',
+  'Study Unit': 'Work desk with overhead shelving or drawer storage for laptops and books.',
+  'Bed': 'Custom bed frame structure with optional headboard and under-bed storage.',
+  'Bedside Table': 'Compact nightstand for beside-the-bed lighting, books, and daily essentials.',
+  'Dressing Unit': 'Mirror frame unit with dedicated vanity drawers and cosmetics storage.',
+  'Base Unit (Kitchen)': 'Under-counter kitchen storage cabinets housing sinks, drawers, and pullouts.',
+  'Wall Unit (Kitchen)': 'Over-counter wall-mounted kitchen cabinets for spices, dishes, and groceries.',
+  'Loft': 'Top-tier overhead storage cabinets above wardrobes or kitchen wall units.',
+  'Tall units (Kitchen)': 'Full-height kitchen pantry cabinet for appliances (oven, microwave) and groceries.',
+  'Shoerack': 'Entryway footwear storage console with ventilation and seating options.'
+}
+
+const ITEM_TYPES = Object.keys(ITEM_DESCRIPTIONS)
 
 export default function NewSubmissionPage() {
   const router = useRouter()
@@ -321,6 +323,14 @@ export default function NewSubmissionPage() {
               </select>
             </div>
           </div>
+
+          {/* Selected Option Type Description Hint */}
+          {ITEM_DESCRIPTIONS[itemType] && (
+            <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '8px 12px', marginBottom: 14, fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontWeight: 600 }}>ℹ️ {itemType}:</span>
+              <span>{ITEM_DESCRIPTIONS[itemType]}</span>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr 1fr', gap: 12, marginBottom: 16 }}>
             <div>
