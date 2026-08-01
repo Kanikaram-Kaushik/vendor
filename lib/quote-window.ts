@@ -58,13 +58,22 @@ export function getEffectiveQuotationExpiresAt(
   return null
 }
 
-export function isQuotationWindowClosed(
-  expiresAt: Date | string | null | undefined,
-  windowHours?: number | null,
-  createdAt?: Date | string | null,
-  now = new Date()
-) {
-  const effectiveExpiresAt = getEffectiveQuotationExpiresAt(expiresAt, windowHours, createdAt)
-  if (!effectiveExpiresAt) return false
-  return effectiveExpiresAt.getTime() <= now.getTime()
-}
+export function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
+  if (!expiresAt) return 'No window set'
+  const remaining = new Date(expiresAt).getTime() - now
+  if (remaining <= 0) return 'Closed'
+
+  const totalSeconds = Math.floor(remaining / 1000)
+  const days = Math.floor(totalSeconds / (3600 * 24))
+  const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  const parts = []
+  if (days > 0) parts.push(`${days}d`)
+  if (hours > 0 || days > 0) parts.push(`${hours}h`)
+  if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`)
+  parts.push(`${seconds}s`)
+
+  return `${parts.join(' ')} left`
+}

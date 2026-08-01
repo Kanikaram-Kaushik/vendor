@@ -64,10 +64,20 @@ function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
   if (!expiresAt) return 'No window set'
   const remaining = new Date(expiresAt).getTime() - now
   if (remaining <= 0) return 'Closed'
-  const totalMinutes = Math.ceil(remaining / 60000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`
+
+  const totalSeconds = Math.floor(remaining / 1000)
+  const days = Math.floor(totalSeconds / (3600 * 24))
+  const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  const parts = []
+  if (days > 0) parts.push(`${days}d`)
+  if (hours > 0 || days > 0) parts.push(`${hours}h`)
+  if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`)
+  parts.push(`${seconds}s`)
+
+  return `${parts.join(' ')} left`
 }
 
 function StatusBadge({ status }: { status: string }) {
