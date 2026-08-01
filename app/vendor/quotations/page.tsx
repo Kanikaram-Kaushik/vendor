@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatQuotationDeadline } from '@/lib/quote-window'
 
 interface QuoteItem {
   id: string
@@ -127,7 +128,7 @@ export default function VendorQuotationsPage() {
                   <th>Project Name</th>
                   <th>Submitted By</th>
                   <th>Items</th>
-                  <th>Window</th>
+                  <th>Deadline</th>
                   <th>Status</th>
                   <th>Received Date</th>
                 </tr>
@@ -144,7 +145,14 @@ export default function VendorQuotationsPage() {
                       {q.itemsCount === 0 ? '-' : q.itemsCount}
                     </td>
                     <td style={{ color: q.isQuotationClosed ? '#b91c1c' : 'var(--text-secondary)', fontWeight: 500 }}>
-                      {q.quotationWindowHours ? `${q.quotationWindowHours}h • ${formatTimeRemaining(q.quotationExpiresAt, now)}` : formatTimeRemaining(q.quotationExpiresAt, now)}
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>
+                        {formatQuotationDeadline(q.quotationExpiresAt)}
+                      </div>
+                      {q.quotationExpiresAt && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                          {formatTimeRemaining(q.quotationExpiresAt, now)}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <StatusBadge status={q.status} />

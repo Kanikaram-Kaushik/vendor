@@ -3,7 +3,7 @@ import { QuoteStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
-import { getEffectiveQuotationExpiresAt, getQuotationExpiresAt } from '@/lib/quote-window'
+import { getEffectiveQuotationExpiresAt, getQuotationExpiresAt, getWindowHoursUntil, parseQuotationDeadline } from '@/lib/quote-window'
 
 interface SubmissionItemInput {
   description: string
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectName, status, items, designerBudget, quotationWindowHours, referenceImage } = await request.json()
+    const { projectName, status, items, designerBudget, quotationDeadline, quotationWindowHours, referenceImage } = await request.json()
 
     if (!projectName) {
       return NextResponse.json(
@@ -100,8 +100,28 @@ export async function POST(request: NextRequest) {
       ? null
       : Number.parseInt(String(quotationWindowHours), 10)
 
-    if (targetStatus === 'SUBMITTED' && (!parsedWindowHours || Number.isNaN(parsedWindowHours) || parsedWindowHours <= 0)) {
-      return NextResponse.json({ error: 'Quotation window hours are required when submitting' }, { status: 400 })
+    // Designers now pick an explicit deadline; quotationWindowHours is still accepted
+    // from older clients and is back-filled below so existing consumers keep working.
+    const hasDeadlineInput = quotationDeadline !== null && quotationDeadline !== undefined && quotationDeadline !== ''
+    const parsedDeadline = parseQuotationDeadline(quotationDeadline)
+
+    if (hasDeadlineInput && !parsedDeadline) {
+      return NextResponse.json({ error: 'Quotation deadline is not a valid date' }, { status: 400 })
+    }
+
+    const expiresAt = parsedDeadline
+      ?? (parsedWindowHours && !Number.isNaN(parsedWindowHours) ? getQuotationExpiresAt(parsedWindowHours) : null)
+    const windowHours = parsedDeadline
+      ? getWindowHoursUntil(parsedDeadline)
+      : (parsedWindowHours && !Number.isNaN(parsedWindowHours) && parsedWindowHours > 0 ? parsedWindowHours : null)
+
+    if (targetStatus === 'SUBMITTED') {
+      if (!expiresAt) {
+        return NextResponse.json({ error: 'A quotation deadline is required when submitting' }, { status: 400 })
+      }
+      if (expiresAt.getTime() <= Date.now()) {
+        return NextResponse.json({ error: 'Quotation deadline must be in the future' }, { status: 400 })
+      }
     }
 
     // Create the quote
@@ -110,8 +130,8 @@ export async function POST(request: NextRequest) {
         projectName,
         designerId: designer.id,
         status: targetStatus,
-        quotationWindowHours: targetStatus === 'SUBMITTED' ? parsedWindowHours : null,
-        quotationExpiresAt: targetStatus === 'SUBMITTED' ? getQuotationExpiresAt(parsedWindowHours) : null,
+        quotationWindowHours: windowHours,
+        quotationExpiresAt: expiresAt,
         referenceImage: referenceImage || null,
         designerBudget: designerBudget ? parseFloat(designerBudget) : null,
         ...(items && items.length > 0 && {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatQuotationDeadline } from '@/lib/quote-window'
 
 interface QuoteItem {
   id: string
@@ -252,13 +253,13 @@ function QuoteDetail({ id }: { id: string }) {
             </div>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Quotation Window</label>
+            <label className="form-label">Quotation Deadline</label>
             <div style={{ fontWeight: 600, color: quote.isQuotationClosed ? '#b91c1c' : 'var(--text-primary)' }}>
-                {quote.quotationWindowHours ? `${quote.quotationWindowHours}h • ${formatTimeRemaining(quote.quotationExpiresAt, now)}` : formatTimeRemaining(quote.quotationExpiresAt, now)}
+                {formatQuotationDeadline(quote.quotationExpiresAt)}
             </div>
             {quote.quotationExpiresAt && (
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                Closes on {new Date(quote.quotationExpiresAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                {formatTimeRemaining(quote.quotationExpiresAt, now)}
               </div>
             )}
           </div>

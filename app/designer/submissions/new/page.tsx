@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatQuotationDeadline, toDateTimeLocalValue } from '@/lib/quote-window'
 
 interface SubmissionItem {
   description: string
@@ -41,7 +42,10 @@ export default function NewSubmissionPage() {
   const router = useRouter()
   const [projectName, setProjectName] = useState('')
   const [designerBudget, setDesignerBudget] = useState('')
-  const [quotationWindowHours, setQuotationWindowHours] = useState('')
+  const [quotationDeadline, setQuotationDeadline] = useState('')
+  // Computed on the client only — a render-time new Date() would differ
+  // between the server and client markup and trip a hydration mismatch.
+  const [minDeadline, setMinDeadline] = useState('')
   const [referenceImage, setReferenceImage] = useState('')
   const [referenceImageName, setReferenceImageName] = useState('')
   const [items, setItems] = useState<SubmissionItem[]>([])
@@ -60,6 +64,10 @@ export default function NewSubmissionPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    setMinDeadline(toDateTimeLocalValue(new Date()))
+  }, [])
 
   function handleReferenceImageChange(file: File | null) {
     if (!file) {
@@ -156,9 +164,17 @@ export default function NewSubmissionPage() {
       return
     }
     if (!asDraft) {
-      const parsedHours = Number(quotationWindowHours)
-      if (!quotationWindowHours || Number.isNaN(parsedHours) || parsedHours <= 0) {
-        setError('Please set a quotation window in hours.')
+      if (!quotationDeadline) {
+        setError('Please pick a quotation deadline.')
+        return
+      }
+      const parsedDeadline = new Date(quotationDeadline)
+      if (Number.isNaN(parsedDeadline.getTime())) {
+        setError('Please pick a valid quotation deadline.')
+        return
+      }
+      if (parsedDeadline.getTime() <= Date.now()) {
+        setError('The quotation deadline must be in the future.')
         return
       }
     }
@@ -173,7 +189,9 @@ export default function NewSubmissionPage() {
           projectName,
           designerBudget: designerBudget ? parseFloat(designerBudget) : null,
           status: asDraft ? 'DRAFT' : 'SUBMITTED',
-          quotationWindowHours: quotationWindowHours ? parseInt(quotationWindowHours, 10) : null,
+          // Send an absolute instant so the server does not reinterpret the
+          // picker's local wall-clock time in its own timezone.
+          quotationDeadline: quotationDeadline ? new Date(quotationDeadline).toISOString() : null,
           referenceImage: referenceImage || null,
           items,
         }),
@@ -214,20 +232,24 @@ export default function NewSubmissionPage() {
           </div>
         </div>
 
-        <div className="form-group" style={{ marginBottom: 20, maxWidth: 280 }}>
-          <label className="form-label">Quotation Window (Hours)</label>
+        <div className="form-group" style={{ marginBottom: 20, maxWidth: 320 }}>
+          <label className="form-label">Quotation Deadline</label>
           <input
-            type="number"
-            min="1"
+            type="datetime-local"
             step="1"
+            min={minDeadline || undefined}
             className="form-input"
-            value={quotationWindowHours}
-            onChange={(e) => setQuotationWindowHours(e.target.value)}
-            placeholder="e.g. 4"
+            value={quotationDeadline}
+            onChange={(e) => setQuotationDeadline(e.target.value)}
           />
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             Required when you submit the project for vendors.
           </div>
+          {quotationDeadline && (
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 6, fontWeight: 600 }}>
+              Closes on {formatQuotationDeadline(quotationDeadline)}
+            </div>
+          )}
         </div>
 
         <div className="form-group" style={{ marginBottom: 20 }}>

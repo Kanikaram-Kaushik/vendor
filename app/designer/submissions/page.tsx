@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { formatQuotationDeadline } from '@/lib/quote-window'
 
 interface SubmissionItem {
   description: string
@@ -257,7 +258,7 @@ function SubmissionsContent() {
                   <th>Customer</th>
                   <th>Project</th>
                   <th>Budget</th>
-                  <th>Quote Window</th>
+                  <th>Quote Deadline</th>
                   <th>Items</th>
                   <th>Status</th>
                   <th>Created</th>
@@ -273,7 +274,14 @@ function SubmissionsContent() {
                       {sub.designerBudget ? `₹${sub.designerBudget.toLocaleString('en-IN')}` : '-'}
                     </td>
                     <td style={{ fontWeight: 500, color: sub.quotationExpiresAt && new Date(sub.quotationExpiresAt).getTime() <= now ? '#b91c1c' : 'var(--text-secondary)' }}>
-                      {sub.quotationWindowHours ? `${sub.quotationWindowHours}h • ${formatTimeRemaining(sub.quotationExpiresAt, now)}` : formatTimeRemaining(sub.quotationExpiresAt, now)}
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>
+                        {formatQuotationDeadline(sub.quotationExpiresAt)}
+                      </div>
+                      {sub.quotationExpiresAt && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                          {formatTimeRemaining(sub.quotationExpiresAt, now)}
+                        </div>
+                      )}
                     </td>
                     <td style={{ color: 'var(--text-muted)' }}>
                       {sub.itemsCount === 0 ? '-' : `${sub.itemsCount} items`}
