@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/main/auth/AuthProvider";
 
 const navItems = [
   { href: "/account", label: "Overview" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/main/auth/AuthProvider";
 import { useEngagements } from "@/hooks/useEngagements";
 import { useComments } from "@/hooks/useComments";
 import type { ApiComment } from "@/hooks/useComments";

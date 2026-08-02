@@ -11,8 +11,8 @@ import {
   getFeaturedInspirations,
   getHomePageData,
 } from "@/data";
-import ButtonLink from "@/components/ButtonLink";
-import SectionHeader from "@/components/SectionHeader";
+import ButtonLink from "@/components/main/ButtonLink";
+import SectionHeader from "@/components/main/SectionHeader";
 
 type DiscoveryKind = "all" | "studio" | "inspiration";
 

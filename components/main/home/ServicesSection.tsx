@@ -1,8 +1,8 @@
 import { ArrowRight, Compass, Palette, Sparkles } from "lucide-react";
 import { getFeaturedServices, getHomePageData } from "@/data";
-import ButtonLink from "@/components/ButtonLink";
-import SectionHeader from "@/components/SectionHeader";
-import Reveal from "@/components/Reveal";
+import ButtonLink from "@/components/main/ButtonLink";
+import SectionHeader from "@/components/main/SectionHeader";
+import Reveal from "@/components/main/Reveal";
 
 export function ServicesSection() {
   const homePage = getHomePageData();

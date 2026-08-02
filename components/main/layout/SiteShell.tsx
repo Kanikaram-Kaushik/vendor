@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/main/SiteHeader";
+import SiteFooter from "@/components/main/SiteFooter";
 
 type SiteShellProps = {
   children: React.ReactNode;

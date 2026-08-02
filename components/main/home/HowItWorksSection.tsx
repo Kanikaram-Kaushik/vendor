@@ -1,5 +1,5 @@
-import SectionHeader from "@/components/SectionHeader";
-import Reveal from "@/components/Reveal";
+import SectionHeader from "@/components/main/SectionHeader";
+import Reveal from "@/components/main/Reveal";
 import { Search, MessagesSquare, PenTool } from "lucide-react";
 
 const STEPS = [

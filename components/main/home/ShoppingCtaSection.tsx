@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { shoppingUrl } from "@/lib/config";
-import ButtonLink from "@/components/ButtonLink";
+import ButtonLink from "@/components/main/ButtonLink";
 
 export function ShoppingCtaSection() {
   return (

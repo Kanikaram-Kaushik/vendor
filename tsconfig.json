@@ -19,11 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./*", "./design-bhk-main/src/*"],
-      "@/components/*": ["./components/*", "./design-bhk-main/src/components/*"],
-      "@/data/*": ["./data/*", "./design-bhk-main/src/data/*"],
-      "@/lib/*": ["./lib/*", "./design-bhk-main/src/lib/*"],
-      "@/data": ["./design-bhk-main/src/data"]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -34,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "design-bhk-main/src/app"]
+  "exclude": ["node_modules", "design-bhk-main"]
 }

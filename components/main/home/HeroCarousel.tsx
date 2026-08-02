@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import ButtonLink from "@/components/ButtonLink";
+import ButtonLink from "@/components/main/ButtonLink";
 
 export type HeroItem = {
   eyebrow?: string;

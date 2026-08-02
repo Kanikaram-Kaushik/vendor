@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getFeaturedInspirations, getHomePageData } from "@/data";
-import ButtonLink from "@/components/ButtonLink";
-import SectionHeader from "@/components/SectionHeader";
-import Reveal from "@/components/Reveal";
+import ButtonLink from "@/components/main/ButtonLink";
+import SectionHeader from "@/components/main/SectionHeader";
+import Reveal from "@/components/main/Reveal";
 
 export function InspirationGallerySection() {
   const homePage = getHomePageData();

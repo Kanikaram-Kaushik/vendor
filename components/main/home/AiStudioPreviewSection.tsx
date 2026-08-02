@@ -4,9 +4,9 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { ImagePlus, WandSparkles } from "lucide-react";
 import { useState } from "react";
-import ButtonLink from "@/components/ButtonLink";
-import { ImageComparison, ImageComparisonLayer, ImageComparisonSlider } from "@/components/ImageComparison";
-import SectionHeader from "@/components/SectionHeader";
+import ButtonLink from "@/components/main/ButtonLink";
+import { ImageComparison, ImageComparisonLayer, ImageComparisonSlider } from "@/components/main/ImageComparison";
+import SectionHeader from "@/components/main/SectionHeader";
 
 const PREVIEW_OUTPUTS = [
   {

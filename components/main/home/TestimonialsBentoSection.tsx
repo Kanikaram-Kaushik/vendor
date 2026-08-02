@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin, Quote, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getTestimonials } from "@/data";
-import SectionHeader from "@/components/SectionHeader";
+import SectionHeader from "@/components/main/SectionHeader";
 
 const AUTOPLAY_MS = 5500;
 const SWIPE_THRESHOLD = 80;

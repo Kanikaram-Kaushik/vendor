@@ -8,7 +8,7 @@ import { brandDashboardUrl, shoppingUrl } from "@/lib/config";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/main/auth/AuthProvider";
 import { ChevronDown } from "lucide-react";
 
 const MenuIcon = ({
