@@ -18,12 +18,21 @@ export const authClient = {
     error: null,
     refetch: async () => {}
   }),
+  emailOtp: {
+    sendVerificationOtp: async (_opts?: any) => ({ data: null, error: null }),
+    verifyEmail: async (_opts?: any) => ({ data: null, error: null })
+  },
+  phoneNumber: {
+    sendOtp: async (_opts?: any) => ({ data: null, error: null }),
+    verify: async (_opts?: any) => ({ data: null, error: null })
+  },
+  updateUser: async (_opts?: any) => ({ data: null, error: null }),
   signIn: {
-    email: async () => ({ data: null, error: null }),
-    phoneNumber: async () => ({ data: null, error: null })
+    email: async (_opts?: any) => ({ data: null, error: null }),
+    phoneNumber: async (_opts?: any) => ({ data: null, error: null })
   },
   signUp: {
-    email: async () => ({ data: null, error: null })
+    email: async (_opts?: any) => ({ data: null, error: null })
   },
   signOut: async () => {}
 }
