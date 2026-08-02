@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/main/auth/AuthProvider";
 
 export type SavedItem = {
   itemType: "inspiration" | "professional";
