@@ -1,6 +1,49 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+:root {
+  --background: #ffffff;
+  --foreground: #141414;
+  --muted: #5c5b5b;
+  --card: #ffffff;
+  --accent: #585656;
+  --accent-strong: #222222;
+  --accent-shadow: 68 68 68;
+  --card-contrast: #fafafa;
+  --text-strong: #000000;
+  --para: #000000;
+  --header-logo-filter: invert(1);
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #818181;
+  --muted: #999999;
+  --card: #1a1a1a;
+  --accent: #ffffff;
+  --accent-strong: #605f5f;
+  --accent-shadow: 187 187 187;
+  --card-contrast: #141414;
+  --text-strong: #ffffff;
+  --para: #ffffff;
+  --header-logo-filter: none;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-text-strong: var(--text-strong);
+  --color-para: var(--para);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
 /* ─── CSS Variables ─────────────────────────────────────────── */
+��───────────────────────────── */
 :root {
   --sidebar-bg: #1a1a1a;
   --sidebar-text: rgba(255, 255, 255, 0.7);
