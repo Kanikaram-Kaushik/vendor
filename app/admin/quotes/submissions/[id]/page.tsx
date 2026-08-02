@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ReferenceImageGallery } from '@/components/ReferenceImageGallery'
 
 interface BrandEstimation {
   brandId: string
@@ -32,6 +33,7 @@ interface DesignerSubmission {
   itemsCount: number
   items: SubmissionItem[]
   createdAt: string
+  referenceImage?: string | null
   brandEstimations: BrandEstimation[]
 }
 
@@ -171,6 +173,8 @@ function ReviewDistributeDetail({ id }: { id: string }) {
             <div>{formatDate(submission.createdAt)}</div>
           </div>
         </div>
+
+        <ReferenceImageGallery referenceImage={submission.referenceImage} />
 
         {/* Item Specifications */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 16, marginBottom: 20, backgroundColor: '#fafafa' }}>

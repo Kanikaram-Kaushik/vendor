@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatQuotationDeadline } from '@/lib/quote-window'
+import { ReferenceImageGallery } from '@/components/ReferenceImageGallery'
 
 interface SubmissionItem {
   id: string
@@ -11,6 +12,7 @@ interface SubmissionItem {
   notes?: string
   pricePerSft?: number | null
   sft?: number | null
+  image?: string | null
 }
 
 interface Submission {
@@ -161,18 +163,7 @@ function SubmissionDetail({ id }: { id: string }) {
           </div>
         </div>
 
-        {submission.referenceImage && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Reference Image
-            </div>
-            <img
-              src={submission.referenceImage}
-              alt="Reference for project"
-              style={{ width: '100%', maxWidth: 520, borderRadius: 10, border: '1px solid var(--border)', objectFit: 'cover' }}
-            />
-          </div>
-        )}
+        <ReferenceImageGallery referenceImage={submission.referenceImage} />
 
         {/* Submission Items List */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, backgroundColor: '#fafafa' }}>
@@ -190,6 +181,7 @@ function SubmissionDetail({ id }: { id: string }) {
                       Size: <strong style={{ color: 'var(--text-primary)' }}>{item.sft || 0} SFT</strong> | Qty: <strong style={{ color: 'var(--text-primary)' }}>{item.quantity}</strong>
                       {item.notes && <span style={{ marginLeft: 10, fontStyle: 'italic', color: 'var(--text-muted)' }}>Note: {item.notes}</span>}
                     </div>
+                    {item.image && <img src={item.image} alt={`${item.description} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
                   </div>
                 </div>
               ))}

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatQuotationDeadline, toDateTimeLocalValue } from '@/lib/quote-window'
+import { formatReferenceImages } from '@/lib/reference-image'
+
 
 interface SubmissionItem {
   description: string
@@ -48,10 +50,9 @@ export default function NewSubmissionPage() {
   // Computed on the client only — a render-time new Date() would differ
   // between the server and client markup and trip a hydration mismatch.
   const [minDeadline, setMinDeadline] = useState('')
-  const [referenceImage, setReferenceImage] = useState('')
-  const [referenceImageName, setReferenceImageName] = useState('')
+  const [referenceImages, setReferenceImages] = useState<string[]>([])
   const [items, setItems] = useState<SubmissionItem[]>([])
-  
+
   // Item detail fields
   const [itemType, setItemType] = useState(ITEM_TYPES[0])
   const [coreMaterial, setCoreMaterial] = useState(CORES[0])
@@ -71,28 +72,41 @@ export default function NewSubmissionPage() {
     setMinDeadline(toDateTimeLocalValue(new Date()))
   }, [])
 
-  function handleReferenceImageChange(file: File | null) {
-    if (!file) {
-      setReferenceImage('')
-      setReferenceImageName('')
+  function handleReferenceImagesChange(files: FileList | null) {
+    if (!files || files.length === 0) return
+
+    const fileArray = Array.from(files)
+    const nonImages = fileArray.filter((f) => !f.type.startsWith('image/'))
+    if (nonImages.length > 0) {
+      setError('Please select only image files for reference images.')
       return
     }
 
-    if (!file.type.startsWith('image/')) {
-      setError('Please choose an image file for the reference image.')
-      return
-    }
+    setError('')
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      setReferenceImage(typeof reader.result === 'string' ? reader.result : '')
-      setReferenceImageName(file.name)
-      setError('')
-    }
-    reader.onerror = () => {
-      setError('Failed to read the selected image.')
-    }
-    reader.readAsDataURL(file)
+    const readPromises = fileArray.map(
+      (file) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+          reader.onerror = () => reject(new Error(`Failed to read file ${file.name}`))
+          reader.readAsDataURL(file)
+        })
+    )
+
+    Promise.all(readPromises)
+      .then((results) => {
+        const valid = results.filter(Boolean)
+        setReferenceImages((prev) => [...prev, ...valid])
+      })
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to read some of the selected images.')
+      })
+  }
+
+  function removeReferenceImage(index: number) {
+    setReferenceImages((prev) => prev.filter((_, i) => i !== index))
   }
 
   function addItem() {
@@ -194,7 +208,7 @@ export default function NewSubmissionPage() {
           // Send an absolute instant so the server does not reinterpret the
           // picker's local wall-clock time in its own timezone.
           quotationDeadline: quotationDeadline ? new Date(quotationDeadline).toISOString() : null,
-          referenceImage: referenceImage || null,
+          referenceImage: formatReferenceImages(referenceImages),
           items,
         }),
       })
@@ -255,38 +269,64 @@ export default function NewSubmissionPage() {
         </div>
 
         <div className="form-group" style={{ marginBottom: 20 }}>
-          <label className="form-label">Reference Image</label>
+          <label className="form-label">Reference Images</label>
           <input
             type="file"
             accept="image/*"
+            multiple
             className="form-input"
-            onChange={(e) => handleReferenceImageChange(e.target.files?.[0] || null)}
+            onChange={(e) => handleReferenceImagesChange(e.target.files)}
           />
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Add a visual reference for how the finished project should look.
+            Add visual references for how the finished project should look (you can select multiple images).
           </div>
-          {referenceImageName && (
-            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
-              Selected file: {referenceImageName}
-            </div>
-          )}
-          {referenceImage && (
-            <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <img
-                src={referenceImage}
-                alt="Reference preview"
-                style={{ width: 220, maxWidth: '100%', borderRadius: 8, border: '1px solid var(--border)', objectFit: 'cover' }}
-              />
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => {
-                  setReferenceImage('')
-                  setReferenceImageName('')
-                }}
-              >
-                Remove Image
-              </button>
+
+          {referenceImages.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                  Attached Reference Images ({referenceImages.length})
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '2px 8px', fontSize: 12 }}
+                  onClick={() => setReferenceImages([])}
+                >
+                  Clear All
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+                {referenceImages.map((imgSrc, idx) => (
+                  <div key={idx} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', aspectRatio: '4/3', backgroundColor: '#f1f5f9' }}>
+                    <img src={imgSrc} alt={`Reference ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button
+                      type="button"
+                      onClick={() => removeReferenceImage(idx)}
+                      style={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        background: 'rgba(239, 68, 68, 0.9)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 22,
+                        height: 22,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Remove image"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

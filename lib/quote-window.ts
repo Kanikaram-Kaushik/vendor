@@ -58,6 +58,17 @@ export function getEffectiveQuotationExpiresAt(
   return null
 }
 
+export function isQuotationWindowClosed(
+  expiresAt: Date | string | null | undefined,
+  windowHours?: number | null,
+  createdAt?: Date | string | null,
+  now = Date.now()
+): boolean {
+  const effectiveDeadline = getEffectiveQuotationExpiresAt(expiresAt, windowHours, createdAt)
+  if (!effectiveDeadline) return false
+  return effectiveDeadline.getTime() <= now
+}
+
 export function formatTimeRemaining(expiresAt?: string | null, now = Date.now()) {
   if (!expiresAt) return 'No window set'
   const remaining = new Date(expiresAt).getTime() - now

@@ -2,24 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { getEffectiveQuotationExpiresAt } from '@/lib/quote-window'
-
-const ITEM_TYPES = [
-  { name: 'Tv Cabinet', code: 1 },
-  { name: 'Crockery Unit', code: 2 },
-  { name: 'Puja Unit', code: 2 },
-  { name: 'Partition', code: 1 },
-  { name: 'Wardrobe', code: 2 },
-  { name: 'Tv Unit', code: 1 },
-  { name: 'Study Unit', code: 1 },
-  { name: 'Bed', code: 2 },
-  { name: 'Bedside Table', code: 1 },
-  { name: 'Dressing Unit', code: 2 },
-  { name: 'Base Unit (Kitchen)', code: 2 },
-  { name: 'Wall Unit (Kitchen)', code: 2 },
-  { name: 'Loft', code: 1 },
-  { name: 'Tall units (Kitchen)', code: 2 },
-  { name: 'Shoerack', code: 1 }
-]
+import { ITEM_TYPES, findMatrixPrice } from '@/lib/pricing-matrix'
 
 async function getAdmin(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value
@@ -72,16 +55,16 @@ export async function GET(request: NextRequest) {
             return
           }
 
-          const code = matchedType.code
-          const cell = brand.matrixCells.find((c) => 
-            c.code === code &&
-            c.hardware.toUpperCase() === item.hardware!.toUpperCase() &&
-            c.coreMaterial.toUpperCase() === item.coreMaterial!.toUpperCase() &&
-            c.externalFinish.toUpperCase() === item.externalFinish!.toUpperCase()
+          const price = findMatrixPrice(
+            brand.matrixCells,
+            matchedType.code,
+            item.hardware,
+            item.coreMaterial,
+            item.externalFinish
           )
 
-          if (cell) {
-            totalCost += (item.sft || 0) * item.quantity * cell.price
+          if (price != null) {
+            totalCost += (item.sft || 0) * item.quantity * price
           } else {
             isComplete = false
           }

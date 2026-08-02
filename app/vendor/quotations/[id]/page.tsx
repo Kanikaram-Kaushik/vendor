@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatQuotationDeadline } from '@/lib/quote-window'
+import { ReferenceImageGallery } from '@/components/ReferenceImageGallery'
 
 interface QuoteItem {
   id: string
@@ -285,18 +286,7 @@ function QuoteDetail({ id }: { id: string }) {
           </div>
         )}
 
-        {quote.referenceImage && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Reference Image
-            </div>
-            <img
-              src={quote.referenceImage}
-              alt="Designer reference"
-              style={{ width: '100%', maxWidth: 520, borderRadius: 10, border: '1px solid var(--border)', objectFit: 'cover' }}
-            />
-          </div>
-        )}
+        <ReferenceImageGallery referenceImage={quote.referenceImage} />
 
         {/* Items Pricing Table */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, marginBottom: 24, backgroundColor: '#fafafa' }}>
