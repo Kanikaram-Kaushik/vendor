@@ -29,6 +29,7 @@ export const authClient = {
   updateUser: async (_opts?: any) => ({ data: null, error: null }),
   signIn: {
     email: async (_opts?: any) => ({ data: null, error: null }),
+    emailOtp: async (_opts?: any) => ({ data: null, error: null }),
     phoneNumber: async (_opts?: any) => ({ data: null, error: null })
   },
   signUp: {
