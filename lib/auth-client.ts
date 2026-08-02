@@ -1,6 +1,16 @@
 export const authClient = {
   $Infer: {
-    Session: null as { user: { firstName?: string; lastName?: string; email?: string } | null }
+    Session: null as {
+      user: {
+        id?: string
+        name?: string
+        firstName?: string
+        lastName?: string
+        email?: string
+        phoneNumber?: string
+        image?: string
+      } | null
+    }
   },
   signIn: {
     email: async () => ({ data: null, error: null }),
