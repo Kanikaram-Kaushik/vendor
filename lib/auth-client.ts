@@ -12,6 +12,12 @@ export const authClient = {
       } | null
     }
   },
+  useSession: () => ({
+    data: null as any,
+    isPending: false,
+    error: null,
+    refetch: async () => {}
+  }),
   signIn: {
     email: async () => ({ data: null, error: null }),
     phoneNumber: async () => ({ data: null, error: null })
