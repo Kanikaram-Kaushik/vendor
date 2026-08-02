@@ -27,3 +27,10 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return null
   }
 }
+
+export const auth = {
+  api: {
+    getSession: async (_opts?: any) => null
+  }
+}
+
