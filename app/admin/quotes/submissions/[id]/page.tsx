@@ -118,6 +118,100 @@ function ReviewDistributeDetail({ id }: { id: string }) {
     }
   }
 
+  const handleDownloadPDF = async () => {
+    if (!submission) return
+    try {
+      const { jsPDF } = await import('jspdf')
+      const doc = new jsPDF()
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFillColor(17, 17, 17)
+      doc.rect(0, 0, 210, 30, 'F')
+
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('DESIGNBHK', 15, 20)
+
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text('DESIGNER SUBMISSION', 150, 20)
+
+      doc.setTextColor(17, 17, 17)
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Submission Details', 15, 45)
+
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Designer Name:', 15, 55)
+      doc.setFont('helvetica', 'normal')
+      doc.text(submission.designerName, 45, 55)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Designer Email:', 15, 62)
+      doc.setFont('helvetica', 'normal')
+      doc.text(submission.designerEmail, 45, 62)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Date Submitted:', 15, 69)
+      doc.setFont('helvetica', 'normal')
+      doc.text(formatDate(submission.createdAt), 45, 69)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Project Name:', 110, 55)
+      doc.setFont('helvetica', 'normal')
+      doc.text(submission.projectName, 138, 55)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Status:', 110, 62)
+      doc.setFont('helvetica', 'normal')
+      doc.text(submission.status, 138, 62)
+
+      doc.setFont('helvetica', 'bold')
+      doc.text('Target Budget:', 110, 69)
+      doc.setFont('helvetica', 'normal')
+      doc.text(submission.designerBudget ? `INR ${submission.designerBudget.toLocaleString('en-IN')}` : 'No Budget Set', 138, 69)
+
+      doc.setDrawColor(220, 220, 220)
+      doc.line(15, 78, 195, 78)
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Project Specifications', 15, 87)
+
+      let y = 96
+      doc.setFillColor(245, 245, 245)
+      doc.rect(15, y, 180, 8, 'F')
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Description', 18, y + 5)
+      doc.text('Size (SFT)', 125, y + 5)
+      doc.text('Qty', 165, y + 5)
+
+      y += 8
+      doc.setFont('helvetica', 'normal')
+
+      submission.items.forEach((item, index) => {
+        if (index % 2 === 1) {
+          doc.setFillColor(250, 250, 250)
+          doc.rect(15, y, 180, 10, 'F')
+        }
+        const desc = item.description.length > 60 ? item.description.substring(0, 57) + '...' : item.description
+        doc.text(desc, 18, y + 6)
+        doc.text(String(item.sft || '-'), 125, y + 6)
+        doc.text(String(item.quantity), 165, y + 6)
+        y += 10
+      })
+
+      doc.save(`Submission-${submission.projectName.replace(/\s+/g, '_')}.pdf`)
+    } catch (err) {
+      console.error('Failed to generate PDF:', err)
+      alert('Error generating PDF. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div style={{ maxWidth: 800, margin: '40px auto', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -144,9 +238,14 @@ function ReviewDistributeDetail({ id }: { id: string }) {
           <h1 className="page-title">Review Submission</h1>
           <p className="page-subtitle">Inspect designer details and select match-making brands</p>
         </div>
-        <button className="btn btn-secondary" onClick={() => router.push('/admin/quotes')}>
-          ← Back to List
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-secondary" onClick={handleDownloadPDF}>
+            Download PDF
+          </button>
+          <button className="btn btn-secondary" onClick={() => router.push('/admin/quotes')}>
+            ← Back to List
+          </button>
+        </div>
       </div>
 
       {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}

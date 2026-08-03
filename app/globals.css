@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -42,8 +42,7 @@
   --font-display: var(--font-display);
 }
 
-/* ─── CSS Variables ─────────────────────────────────────────── */
-��───────────────────────────── */
+/* CSS Variables */
 :root {
   --sidebar-bg: #1a1a1a;
   --sidebar-text: rgba(255, 255, 255, 0.7);
@@ -87,7 +86,7 @@
   --transition: 150ms ease;
 }
 
-/* ─── Reset ─────────────────────────────────────────────────── */
+/*  Reset  */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -103,14 +102,14 @@ a { text-decoration: none; color: inherit; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, select, textarea { font-family: inherit; }
 
-/* ─── Layout ─────────────────────────────────────────────────── */
+/*  Layout  */
 .app-layout {
   display: flex;
   height: 100vh;
   overflow: hidden;
 }
 
-/* ─── Sidebar ─────────────────────────────────────────────────── */
+/*  Sidebar  */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--sidebar-bg);
@@ -201,7 +200,7 @@ input, select, textarea { font-family: inherit; }
   height: 14px;
 }
 
-/* ─── Main Content ─────────────────────────────────────────────── */
+/*  Main Content  */
 .main-content {
   flex: 1;
   overflow-y: auto;
@@ -234,7 +233,7 @@ input, select, textarea { font-family: inherit; }
   flex: 1;
 }
 
-/* ─── Cards ─────────────────────────────────────────────────── */
+/*  Cards  */
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -260,7 +259,7 @@ input, select, textarea { font-family: inherit; }
   padding: 20px;
 }
 
-/* ─── Stats Grid ─────────────────────────────────────────────── */
+/*  Stats Grid  */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -299,7 +298,7 @@ input, select, textarea { font-family: inherit; }
   color: var(--text-muted);
 }
 
-/* ─── Two-col grid ────────────────────────────────────────────── */
+/*  Two-col grid  */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -307,7 +306,7 @@ input, select, textarea { font-family: inherit; }
   margin-bottom: 20px;
 }
 
-/* ─── Pipeline Grid ─────────────────────────────────────────── */
+/*  Pipeline Grid  */
 .pipeline-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -334,7 +333,7 @@ input, select, textarea { font-family: inherit; }
   letter-spacing: -0.5px;
 }
 
-/* ─── Badges ─────────────────────────────────────────────────── */
+/*  Badges  */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -354,7 +353,7 @@ input, select, textarea { font-family: inherit; }
 .badge-admin { background: #ede9fe; color: #7c3aed; }
 .badge-designer { background: #e0f2fe; color: #0369a1; }
 
-/* ─── Tables ─────────────────────────────────────────────────── */
+/*  Tables  */
 .table-wrap {
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -423,7 +422,7 @@ input, select, textarea { font-family: inherit; }
   border-color: #ccc;
 }
 
-/* ─── Quote Row (overview) ──────────────────────────────────── */
+/*  Quote Row (overview)  */
 .quote-list { display: flex; flex-direction: column; gap: 0; }
 
 .quote-row {
@@ -497,7 +496,7 @@ input, select, textarea { font-family: inherit; }
   border-color: var(--text-primary);
 }
 
-/* ─── Buttons ─────────────────────────────────────────────────── */
+/*  Buttons  */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -533,7 +532,7 @@ input, select, textarea { font-family: inherit; }
 
 .btn-danger:hover { background: #fecaca; }
 
-/* ─── Forms / Modals ─────────────────────────────────────────── */
+/*  Forms / Modals  */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -604,7 +603,7 @@ input, select, textarea { font-family: inherit; }
   justify-content: flex-end;
 }
 
-/* ─── Login Page ─────────────────────────────────────────────── */
+/*  Login Page  */
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -690,7 +689,7 @@ input, select, textarea { font-family: inherit; }
   margin-bottom: 14px;
 }
 
-/* ─── Actions Dropdown ──────────────────────────────────────── */
+/*  Actions Dropdown  */
 .actions-menu-wrap { position: relative; display: inline-block; }
 
 .actions-dropdown {
@@ -728,7 +727,7 @@ input, select, textarea { font-family: inherit; }
 .actions-dropdown button.danger { color: #dc2626; }
 .actions-dropdown button.danger:hover { background: #fee2e2; }
 
-/* ─── Audit Logs ─────────────────────────────────────────────── */
+/*  Audit Logs  */
 .log-list { display: flex; flex-direction: column; }
 
 .log-row {
@@ -768,7 +767,7 @@ input, select, textarea { font-family: inherit; }
 .log-by { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
 .log-time { font-size: 11px; color: var(--text-muted); }
 
-/* ─── Real-time indicator ──────────────────────────────────── */
+/*  Real-time indicator  */
 .realtime-dot {
   display: inline-flex;
   align-items: center;
@@ -792,7 +791,7 @@ input, select, textarea { font-family: inherit; }
   50% { opacity: 0.4; }
 }
 
-/* ─── Empty State ────────────────────────────────────────────── */
+/*  Empty State  */
 .empty-state {
   text-align: center;
   padding: 48px 20px;
@@ -803,7 +802,7 @@ input, select, textarea { font-family: inherit; }
 .empty-state-text { font-size: 14px; font-weight: 500; }
 .empty-state-sub { font-size: 12px; margin-top: 4px; }
 
-/* ─── Filter bar ─────────────────────────────────────────────── */
+/*  Filter bar  */
 .filter-bar {
   display: flex;
   gap: 8px;
@@ -825,7 +824,7 @@ input, select, textarea { font-family: inherit; }
 .filter-chip:hover { border-color: #aaa; }
 .filter-chip.active { background: #111; color: white; border-color: #111; }
 
-/* ─── Search Input ──────────────────────────────────────────── */
+/*  Search Input  */
 .search-input {
   padding: 8px 12px;
   border: 1px solid var(--border);
@@ -840,7 +839,7 @@ input, select, textarea { font-family: inherit; }
 
 .search-input:focus { border-color: #aaa; }
 
-/* ─── View All link ─────────────────────────────────────────── */
+/*  View All link  */
 .view-all {
   font-size: 12px;
   color: var(--text-muted);
@@ -851,7 +850,7 @@ input, select, textarea { font-family: inherit; }
 
 .view-all:hover { color: var(--text-primary); }
 
-/* ─── Brand Cards (overview) ─────────────────────────────────── */
+/*  Brand Cards (overview)  */
 .brand-card-mini {
   display: flex;
   align-items: center;
@@ -882,13 +881,13 @@ input, select, textarea { font-family: inherit; }
   gap: 8px;
 }
 
-/* ─── Scrollbar ─────────────────────────────────────────────── */
+/*  Scrollbar  */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #bbb; }
 
-/* ─── Misc utilities ─────────────────────────────────────────── */
+/*  Misc utilities  */
 .text-muted { color: var(--text-muted); }
 .text-sm { font-size: 12px; }
 .font-semibold { font-weight: 600; }
@@ -902,7 +901,7 @@ input, select, textarea { font-family: inherit; }
 .ml-auto { margin-left: auto; }
 .w-full { width: 100%; }
 
-/* ─── Print Styles ───────────────────────────────────────────── */
+/*  Print Styles  */
 @media print {
   .sidebar,
   .no-print,

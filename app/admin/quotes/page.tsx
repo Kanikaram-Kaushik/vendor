@@ -231,17 +231,24 @@ export default function QuotesPage() {
                       <td><StatusBadge status={sub.status} /></td>
                       <td style={{ color: 'var(--text-muted)' }}>{formatDate(sub.createdAt)}</td>
                       <td style={{ textAlign: 'right' }}>
-                        {sub.status === 'SUBMITTED' ? (
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
                           <button 
-                            className="btn btn-primary" 
-                            style={{ background: '#000', color: '#fff', fontSize: 12, padding: '6px 12px' }}
+                            className="btn btn-secondary" 
+                            style={{ fontSize: 12, padding: '4px 10px' }}
                             onClick={() => router.push(`/admin/quotes/submissions/${sub.id}`)}
                           >
-                            Review & Distribute
+                            View Details
                           </button>
-                        ) : (
-                          <span style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 500 }}>Distributed</span>
-                        )}
+                          {sub.status === 'SUBMITTED' && (
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ background: '#000', color: '#fff', fontSize: 12, padding: '4px 10px' }}
+                              onClick={() => router.push(`/admin/quotes/submissions/${sub.id}`)}
+                            >
+                              Review & Distribute
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
