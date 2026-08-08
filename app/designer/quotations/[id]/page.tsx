@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { parseReferenceImages } from '@/lib/reference-image'
 
 interface QuotationItem {
   id: string
@@ -10,6 +11,7 @@ interface QuotationItem {
   sft: number
   pricePerSft: number | null
   notes?: string
+  image?: string | null
 }
 
 interface Quotation {
@@ -25,6 +27,7 @@ interface Quotation {
   totalPrice: number | null
   isFullyPriced: boolean
   createdAt: string
+  referenceImage?: string | null
 }
 
 function formatDate(dateStr: string) {
@@ -158,13 +161,62 @@ function QuotationDetail({ id }: { id: string }) {
       doc.setDrawColor(220, 220, 220)
       doc.line(15, 78, 195, 78)
 
+      let y = 87
+
+      // Helper function to load image to HTMLImageElement
+      const loadImage = (url: string): Promise<HTMLImageElement> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image()
+          img.crossOrigin = 'Anonymous'
+          img.onload = () => resolve(img)
+          img.onerror = (e) => reject(e)
+          img.src = url
+        })
+      }
+
+      // Check for reference images
+      const refImages = parseReferenceImages(quotation.referenceImage)
+
+      if (refImages.length > 0) {
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`Reference Images (${refImages.length})`, 15, y)
+        y += 6
+
+        let xOffset = 15
+        for (let i = 0; i < refImages.length; i++) {
+          try {
+            const img = await loadImage(refImages[i])
+            if (xOffset + 35 > 195) {
+              xOffset = 15
+              y += 30
+            }
+            if (y + 28 > 270) {
+              doc.addPage()
+              y = 20
+              xOffset = 15
+            }
+            doc.addImage(img, 'JPEG', xOffset, y, 32, 24)
+            xOffset += 36
+          } catch (e) {
+            console.warn('Could not embed reference image in PDF:', e)
+          }
+        }
+        y += 30
+      }
+
       // Section: Itemized Rates Header
+      if (y + 20 > 270) {
+        doc.addPage()
+        y = 20
+      }
+
       doc.setFontSize(12)
       doc.setFont('helvetica', 'bold')
-      doc.text('Itemized Specifications', 15, 87)
+      doc.text('Itemized Specifications', 15, y)
+      y += 6
 
       // Table Header
-      let y = 96
       doc.setFillColor(245, 245, 245)
       doc.rect(15, y, 180, 8, 'F')
 
@@ -179,18 +231,24 @@ function QuotationDetail({ id }: { id: string }) {
       y += 8
       doc.setFont('helvetica', 'normal')
 
-      // Items loop
-      quotation.items.forEach((item, index) => {
-        // Draw row background for alternating rows
-        if (index % 2 === 1) {
-          doc.setFillColor(250, 250, 250)
-          doc.rect(15, y, 180, 10, 'F')
+      // Items loop with unit image rendering
+      for (let index = 0; index < quotation.items.length; index++) {
+        const item = quotation.items[index]
+        const hasUnitImage = !!item.image
+        const rowHeight = hasUnitImage ? 32 : 12
+
+        if (y + rowHeight > 270) {
+          doc.addPage()
+          y = 20
         }
 
-        // Draw description text (truncate if too long)
+        if (index % 2 === 1) {
+          doc.setFillColor(250, 250, 250)
+          doc.rect(15, y, 180, rowHeight, 'F')
+        }
+
         const desc = item.description.length > 55 ? item.description.substring(0, 52) + '...' : item.description
         doc.text(desc, 18, y + 6)
-        
         doc.text(String(item.sft), 115, y + 6)
         doc.text(String(item.quantity), 140, y + 6)
         doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, y + 6)
@@ -198,15 +256,28 @@ function QuotationDetail({ id }: { id: string }) {
         const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
         doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, y + 6)
 
-        y += 10
-      })
+        if (hasUnitImage && item.image) {
+          try {
+            const unitImg = await loadImage(item.image)
+            doc.addImage(unitImg, 'JPEG', 18, y + 9, 28, 20)
+          } catch (e) {
+            console.warn('Could not embed unit image in PDF:', e)
+          }
+        }
+
+        y += rowHeight
+      }
 
       // Divider Line
-      doc.line(15, y + 4, 195, y + 4)
-      y += 12
+      doc.line(15, y + 2, 195, y + 2)
+      y += 8
 
       // Estimated Brand Total
       if (quotation.totalPrice !== null) {
+        if (y + 10 > 270) {
+          doc.addPage()
+          y = 20
+        }
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(11)
         doc.text('Estimated Brand Total:', 110, y)
@@ -288,8 +359,18 @@ function QuotationDetail({ id }: { id: string }) {
 
         {/* Itemized pricing table */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, marginBottom: 24, backgroundColor: '#fafafa' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Brand Itemized Rates
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Brand Itemized Rates
+            </div>
+            {(() => {
+              const totalSft = quotation.items.reduce((sum, item) => sum + ((item.sft || 0) * (item.quantity || 1)), 0)
+              return totalSft > 0 ? (
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: '#e2e8f0', padding: '2px 10px', borderRadius: 12 }}>
+                  Total Area: {Math.round(totalSft * 100) / 100} SFT
+                </span>
+              ) : null
+            })()}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -302,6 +383,11 @@ function QuotationDetail({ id }: { id: string }) {
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
                       Size: {item.sft} SFT | Qty: {item.quantity} {item.notes && `| Note: ${item.notes}`}
                     </div>
+                    {item.image && (
+                      <div style={{ marginTop: 8 }}>
+                        <img src={item.image} alt={`${item.description} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                      </div>
+                    )}
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 120 }}>
                     {item.pricePerSft !== null ? (

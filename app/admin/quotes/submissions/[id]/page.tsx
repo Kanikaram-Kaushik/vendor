@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ReferenceImageGallery } from '@/components/ReferenceImageGallery'
+import { parseReferenceImages } from '@/lib/reference-image'
 
 interface BrandEstimation {
   brandId: string
@@ -173,14 +174,63 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       doc.setFont('helvetica', 'normal')
       doc.text(submission.designerBudget ? `INR ${submission.designerBudget.toLocaleString('en-IN')}` : 'No Budget Set', 138, 69)
 
+      // Helper function to load image to HTMLImageElement
+      const loadImage = (url: string): Promise<HTMLImageElement> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image()
+          img.crossOrigin = 'Anonymous'
+          img.onload = () => resolve(img)
+          img.onerror = (e) => reject(e)
+          img.src = url
+        })
+      }
+
+      let y = 78
       doc.setDrawColor(220, 220, 220)
-      doc.line(15, 78, 195, 78)
+      doc.line(15, y, 195, y)
+      y += 8
+
+      // Check for reference images
+      const refImages = parseReferenceImages(submission.referenceImage)
+
+      if (refImages.length > 0) {
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`Reference Images (${refImages.length})`, 15, y)
+        y += 6
+
+        let xOffset = 15
+        for (let i = 0; i < refImages.length; i++) {
+          try {
+            const img = await loadImage(refImages[i])
+            if (xOffset + 35 > 195) {
+              xOffset = 15
+              y += 30
+            }
+            if (y + 28 > 270) {
+              doc.addPage()
+              y = 20
+              xOffset = 15
+            }
+            doc.addImage(img, 'JPEG', xOffset, y, 32, 24)
+            xOffset += 36
+          } catch (e) {
+            console.warn('Could not embed reference image in PDF:', e)
+          }
+        }
+        y += 30
+      }
+
+      if (y + 20 > 270) {
+        doc.addPage()
+        y = 20
+      }
 
       doc.setFontSize(12)
       doc.setFont('helvetica', 'bold')
-      doc.text('Project Specifications', 15, 87)
+      doc.text('Project Specifications', 15, y)
+      y += 6
 
-      let y = 96
       doc.setFillColor(245, 245, 245)
       doc.rect(15, y, 180, 8, 'F')
 
@@ -193,17 +243,37 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       y += 8
       doc.setFont('helvetica', 'normal')
 
-      submission.items.forEach((item, index) => {
+      for (let index = 0; index < submission.items.length; index++) {
+        const item = submission.items[index]
+        const hasUnitImage = !!item.image
+        const rowHeight = hasUnitImage ? 32 : 12
+
+        if (y + rowHeight > 270) {
+          doc.addPage()
+          y = 20
+        }
+
         if (index % 2 === 1) {
           doc.setFillColor(250, 250, 250)
-          doc.rect(15, y, 180, 10, 'F')
+          doc.rect(15, y, 180, rowHeight, 'F')
         }
+
         const desc = item.description.length > 60 ? item.description.substring(0, 57) + '...' : item.description
         doc.text(desc, 18, y + 6)
         doc.text(String(item.sft || '-'), 125, y + 6)
         doc.text(String(item.quantity), 165, y + 6)
-        y += 10
-      })
+
+        if (hasUnitImage && item.image) {
+          try {
+            const unitImg = await loadImage(item.image)
+            doc.addImage(unitImg, 'JPEG', 18, y + 9, 28, 20)
+          } catch (e) {
+            console.warn('Could not embed unit image in PDF:', e)
+          }
+        }
+
+        y += rowHeight
+      }
 
       doc.save(`Submission-${submission.projectName.replace(/\s+/g, '_')}.pdf`)
     } catch (err) {

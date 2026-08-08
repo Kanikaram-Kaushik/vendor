@@ -288,11 +288,24 @@ function QuoteDetail({ id }: { id: string }) {
 
         <ReferenceImageGallery referenceImage={quote.referenceImage} />
 
-        {/* Items Pricing Table */}
+                    {/* Items Pricing Table */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, marginBottom: 24, backgroundColor: '#fafafa' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Quote Items & Pricing
-          </div>
+          {/* Calculate and display Total SFT */}
+                    {(() => {
+                      const totalSft = quote.items?.reduce((sum, item) => sum + ((item.sft || 0) * (item.quantity || 1)), 0) || 0
+                      return (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--border-light)' }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Quote Items & Pricing
+                          </span>
+                          {totalSft > 0 && (
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', background: '#e2e8f0', padding: '2px 10px', borderRadius: 12 }}>
+                              Total Area: {Math.round(totalSft * 100) / 100} SFT
+                            </span>
+                          )}
+                        </div>
+                      )
+                    })()}
 
           {quote.items && quote.items.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -307,7 +320,12 @@ function QuoteDetail({ id }: { id: string }) {
                           {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
                         </div>
                         {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
-                        {item.image && <img src={item.image} alt={`${item.itemType || 'Submission'} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
+                        {item.image && (
+                          <div style={{ marginTop: 10 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>Unit Image:</div>
+                            <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 140, height: 105, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {isEditable && (

@@ -6,30 +6,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes
-  if (pathname === '/login' || pathname === '/customer/login' || pathname === '/designer/login' || pathname === '/vendor/login' || pathname === '/') {
+  if (pathname === '/login' || pathname === '/designer/login' || pathname === '/vendor/login' || pathname === '/') {
     return NextResponse.next()
   }
 
   if (pathname.startsWith('/customer')) {
-    const token = request.cookies.get('customer-token')?.value
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/customer/login', request.url))
-    }
-
-    const payload = await verifyToken(token)
-
-    if (!payload) {
-      const response = NextResponse.redirect(new URL('/customer/login', request.url))
-      response.cookies.delete('customer-token')
-      return response
-    }
-
-    if (payload.role !== 'CUSTOMER') {
-      return NextResponse.redirect(new URL('/customer/login', request.url))
-    }
-
-    return NextResponse.next()
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Protect /admin routes

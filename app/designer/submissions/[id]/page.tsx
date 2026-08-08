@@ -167,8 +167,18 @@ function SubmissionDetail({ id }: { id: string }) {
 
         {/* Submission Items List */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, backgroundColor: '#fafafa' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Items & Specifications
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Items & Specifications
+            </div>
+            {(() => {
+              const totalSft = submission.items?.reduce((sum, item) => sum + ((item.sft || 0) * (item.quantity || 1)), 0) || 0
+              return totalSft > 0 ? (
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: '#e2e8f0', padding: '2px 10px', borderRadius: 12 }}>
+                  Total Area: {Math.round(totalSft * 100) / 100} SFT
+                </span>
+              ) : null
+            })()}
           </div>
           
           {submission.items && submission.items.length > 0 ? (

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -100,14 +99,8 @@ export default function LoginPage() {
 
         <div style={{ marginTop: 20, textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: '#999' }}>
-            Portal access for Admins, Designers, Vendors & Customers.
+            Portal access for Admins, Designers & Vendors.
           </p>
-          <Link
-            href="/customer/login"
-            style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 600, color: '#111' }}
-          >
-            Customer login
-          </Link>
         </div>
       </div>
     </div>

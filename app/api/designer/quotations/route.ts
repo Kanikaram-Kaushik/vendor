@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch child quotes where parentQuote.designerId matches
     const quotes = await prisma.quote.findMany({
       where: {
         parentQuoteId: { not: null },
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
       include: {
         brand: { select: { name: true, email: true } },
         items: true,
-        parentQuote: { select: { projectName: true, designerBudget: true } },
+        parentQuote: { select: { projectName: true, designerBudget: true, referenceImage: true } },
       },
     })
 
@@ -60,6 +59,7 @@ export async function GET(request: NextRequest) {
           isFullyPriced,
           createdAt: q.createdAt,
           parentQuoteId: q.parentQuoteId,
+          referenceImage: q.parentQuote?.referenceImage || q.referenceImage,
         }
       }),
     })
