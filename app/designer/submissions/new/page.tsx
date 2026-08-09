@@ -21,6 +21,7 @@ interface SubmissionItem {
 
 const HARDWARES = ['EBCO', 'HETTICH', 'HAFELE']
 const CORES = ['MR Ply', 'BWP Ply', 'HDHMR']
+const FINISHES = ['Laminate', 'Acrylic', 'PU']
 const NON_WOOD_ITEMS: Record<string, string> = {
   'False Ceiling': 'Sft - Gypsum board, POP, or grid false ceiling with cove lighting layout.',
   'Electrical': 'No - Point wiring, DB setup, switchboard installation, and ambient fixture wiring.',
