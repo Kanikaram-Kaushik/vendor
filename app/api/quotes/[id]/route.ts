@@ -9,6 +9,66 @@ async function getAdmin(request: NextRequest) {
   return verifyToken(token)
 }
 
+// GET /api/quotes/[id]
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const admin = await getAdmin(request)
+    if (!admin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const quote = await prisma.quote.findUnique({
+      where: { id },
+      include: {
+        brand: { select: { name: true, email: true, termsAndConditions: true } },
+        items: true,
+        parentQuote: { select: { projectName: true, designerBudget: true, referenceImage: true } },
+      }
+    })
+
+    if (!quote) {
+      return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
+    }
+
+    let totalPrice = 0
+    let isFullyPriced = true
+    quote.items.forEach((item) => {
+      if (item.pricePerSft !== null && item.pricePerSft !== undefined) {
+        totalPrice += (item.sft || 0) * item.quantity * item.pricePerSft
+      } else {
+        isFullyPriced = false
+      }
+    })
+
+    return NextResponse.json({
+      quote: {
+        id: quote.id,
+        brandId: quote.brandId,
+        brandName: quote.brand?.name || 'Unknown Brand',
+        brandEmail: quote.brand?.email || '',
+        projectName: quote.parentQuote?.projectName || quote.projectName,
+        designerBudget: quote.parentQuote?.designerBudget || quote.designerBudget,
+        status: quote.status === 'REJECTED' ? 'DECLINED' : quote.status,
+        itemsCount: quote.items.length,
+        items: quote.items,
+        totalPrice: isFullyPriced ? totalPrice : null,
+        isFullyPriced,
+        createdAt: quote.createdAt,
+        parentQuoteId: quote.parentQuoteId,
+        referenceImage: quote.parentQuote?.referenceImage || quote.referenceImage,
+        brandTerms: quote.brand?.termsAndConditions || null,
+      }
+    })
+  } catch (error) {
+    console.error('Admin GET quote error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 // PATCH /api/quotes/[id]
 export async function PATCH(
   request: NextRequest,

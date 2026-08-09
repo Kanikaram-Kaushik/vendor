@@ -342,7 +342,7 @@ export default function QuotesPage() {
                               <button
                                 className="btn btn-secondary"
                                 style={{ padding: '5px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
-                                onClick={() => router.push(`/designer/quotations/${quote.id}`)}
+                                onClick={() => router.push(`/admin/quotes/${quote.id}`)}
                               >
                                 📄 View Doc
                               </button>
