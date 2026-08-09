@@ -33,6 +33,7 @@ interface Quotation {
   isFullyPriced: boolean
   createdAt: string
   referenceImage?: string | null
+  brandTerms?: string | null
 }
 
 function formatDate(dateStr: string) {
@@ -466,32 +467,48 @@ function QuotationDetail({ id }: { id: string }) {
       doc.text('Terms And Conditions', 15, y)
       y += 8
 
-      const termsList = [
-        { title: 'Validity', desc: 'This quotation is valid for 15 (fifteen) days from the date of issue. Prices, materials, and availability are subject to change thereafter without prior notice.' },
-        { title: 'Scope & Changes', desc: 'The quotation is based on specifications shared by Client. Any changes requested after acceptance will be treated as extra work and charged separately.' },
-        { title: 'Payments', desc: 'Payment terms will follow agreed milestone schedule. Work will commence after advance payment.' },
-        { title: 'Materials & Third-Party Vendors', desc: 'Rates for materials are as quoted at preparation time. Any market fluctuation will be borne by Client.' },
-        { title: 'Timelines', desc: 'Estimated timelines are indicative (Standard delivery within 45 working days from design finalization).' },
-        { title: 'Ownership & Acceptance', desc: 'All drawings and designs remain intellectual property until full payment is received. Approval confirms acceptance of terms.' }
-      ]
-
-      doc.setFontSize(8.5)
-      termsList.forEach(t => {
-        if (y + 12 > 270) {
-          doc.addPage()
-          y = 20
-        }
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(17, 17, 17)
-        doc.text(t.title, 15, y)
-        y += 4
-
+      if (quotation.brandTerms) {
         doc.setFont('helvetica', 'normal')
+        doc.setFontSize(9)
         doc.setTextColor(70, 70, 70)
-        const lines = doc.splitTextToSize(`• ${t.desc}`, 175)
-        doc.text(lines, 18, y)
-        y += (lines.length * 3.8) + 3
-      })
+        const lines = doc.splitTextToSize(quotation.brandTerms, 175)
+        
+        lines.forEach((line: string) => {
+          if (y + 6 > 270) {
+            doc.addPage()
+            y = 20
+          }
+          doc.text(line, 15, y)
+          y += 5
+        })
+      } else {
+        const termsList = [
+          { title: 'Validity', desc: 'This quotation is valid for 15 (fifteen) days from the date of issue. Prices, materials, and availability are subject to change thereafter without prior notice.' },
+          { title: 'Scope & Changes', desc: 'The quotation is based on specifications shared by Client. Any changes requested after acceptance will be treated as extra work and charged separately.' },
+          { title: 'Payments', desc: 'Payment terms will follow agreed milestone schedule. Work will commence after advance payment.' },
+          { title: 'Materials & Third-Party Vendors', desc: 'Rates for materials are as quoted at preparation time. Any market fluctuation will be borne by Client.' },
+          { title: 'Timelines', desc: 'Estimated timelines are indicative (Standard delivery within 45 working days from design finalization).' },
+          { title: 'Ownership & Acceptance', desc: 'All drawings and designs remain intellectual property until full payment is received. Approval confirms acceptance of terms.' }
+        ]
+
+        doc.setFontSize(8.5)
+        termsList.forEach(t => {
+          if (y + 12 > 270) {
+            doc.addPage()
+            y = 20
+          }
+          doc.setFont('helvetica', 'bold')
+          doc.setTextColor(17, 17, 17)
+          doc.text(t.title, 15, y)
+          y += 4
+
+          doc.setFont('helvetica', 'normal')
+          doc.setTextColor(70, 70, 70)
+          const lines = doc.splitTextToSize(`• ${t.desc}`, 175)
+          doc.text(lines, 18, y)
+          y += (lines.length * 3.8) + 3
+        })
+      }
 
       // Save Document
       doc.save(`Quotation-${quotation.projectName.replace(/\s+/g, '_')}.pdf`)

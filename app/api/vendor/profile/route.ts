@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         twitter: true,
         instagram: true,
         portfolio: true,
+        termsAndConditions: true,
       },
     })
 
@@ -88,6 +89,7 @@ export async function PUT(request: NextRequest) {
         twitter: body.twitter,
         instagram: body.instagram,
         portfolio: body.portfolio ? JSON.stringify(body.portfolio) : null,
+        termsAndConditions: body.termsAndConditions,
       },
       select: { id: true, name: true, email: true },
     })

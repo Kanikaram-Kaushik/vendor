@@ -49,6 +49,7 @@ model Brand {
   twitter      String?
   instagram    String?
   portfolio    String?     // JSON string storing projects & media urls
+  termsAndConditions String? @db.Text // Custom Terms & Conditions for PDFs
 
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt

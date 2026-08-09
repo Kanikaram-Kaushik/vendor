@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
       include: {
-        brand: { select: { name: true, email: true } },
+        brand: { select: { name: true, email: true, termsAndConditions: true } },
         items: true,
         parentQuote: { select: { projectName: true, designerBudget: true, referenceImage: true } },
       },
@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
           createdAt: q.createdAt,
           parentQuoteId: q.parentQuoteId,
           referenceImage: q.parentQuote?.referenceImage || q.referenceImage,
+          brandTerms: q.brand?.termsAndConditions || null,
         }
       }),
     })

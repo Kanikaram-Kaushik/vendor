@@ -39,6 +39,8 @@ export default function VendorProfilePage() {
   const [facebook, setFacebook] = useState('')
   const [twitter, setTwitter] = useState('')
   const [instagram, setInstagram] = useState('')
+  
+  const [termsAndConditions, setTermsAndConditions] = useState('')
 
   const [projects, setProjects] = useState<Project[]>([
     { id: '1', name: 'Project 1', isOpen: false },
@@ -74,6 +76,7 @@ export default function VendorProfilePage() {
             setFacebook(b.facebook || '')
             setTwitter(b.twitter || '')
             setInstagram(b.instagram || '')
+            setTermsAndConditions(b.termsAndConditions || '')
             
             if (b.portfolio) {
               try {
@@ -141,6 +144,7 @@ export default function VendorProfilePage() {
           facebook,
           twitter,
           instagram,
+          termsAndConditions,
           portfolio: projects,
         }),
       })
@@ -492,6 +496,28 @@ export default function VendorProfilePage() {
               >
                 Click to upload Images
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. Terms & Conditions */}
+        <div className="card">
+          <div className="card-header" style={{ background: '#fafafa' }}>
+            <div>
+              <span className="card-title" style={{ fontSize: 14, fontWeight: 600 }}>Custom Terms & Conditions</span>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>These will be appended to the quotation PDFs generated for your brand.</div>
+            </div>
+          </div>
+          <div className="card-body" style={{ padding: 24 }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Terms & Conditions</label>
+              <textarea
+                className="form-input"
+                style={{ minHeight: 150, resize: 'vertical' }}
+                value={termsAndConditions}
+                onChange={e => setTermsAndConditions(e.target.value)}
+                placeholder={`1. 50% advance before starting work.\n2. Warranty is applicable for 5 years...`}
+              />
             </div>
           </div>
         </div>
