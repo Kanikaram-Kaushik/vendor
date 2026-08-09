@@ -126,55 +126,6 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
 
-      doc.setFont('helvetica', 'normal')
-      doc.setFillColor(17, 17, 17)
-      doc.rect(0, 0, 210, 30, 'F')
-
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(18)
-      doc.setFont('helvetica', 'bold')
-      doc.text('DESIGNBHK', 15, 20)
-
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      doc.text('DESIGNER SUBMISSION', 150, 20)
-
-      doc.setTextColor(17, 17, 17)
-      doc.setFontSize(14)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Submission Details', 15, 45)
-
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Designer Name:', 15, 55)
-      doc.setFont('helvetica', 'normal')
-      doc.text(submission.designerName, 45, 55)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Designer Email:', 15, 62)
-      doc.setFont('helvetica', 'normal')
-      doc.text(submission.designerEmail, 45, 62)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Date Submitted:', 15, 69)
-      doc.setFont('helvetica', 'normal')
-      doc.text(formatDate(submission.createdAt), 45, 69)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Project Name:', 110, 55)
-      doc.setFont('helvetica', 'normal')
-      doc.text(submission.projectName, 138, 55)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Status:', 110, 62)
-      doc.setFont('helvetica', 'normal')
-      doc.text(submission.status, 138, 62)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Target Budget:', 110, 69)
-      doc.setFont('helvetica', 'normal')
-      doc.text(submission.designerBudget ? `INR ${submission.designerBudget.toLocaleString('en-IN')}` : 'No Budget Set', 138, 69)
-
       // Helper function to load image to HTMLImageElement
       const loadImage = (url: string): Promise<HTMLImageElement> => {
         return new Promise((resolve, reject) => {
@@ -186,152 +137,309 @@ function ReviewDistributeDetail({ id }: { id: string }) {
         })
       }
 
-      let y = 78
-      doc.setDrawColor(220, 220, 220)
-      doc.line(15, y, 195, y)
+      // 1. TOP HEADER (Brand / Showroom Info)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(16)
+      doc.setTextColor(17, 17, 17)
+      doc.text('DesignBHK', 120, 20)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(60, 60, 60)
+      doc.text('Experience Centre Showroom', 120, 26)
+      doc.text('Beside Kotak Mahindra Bank, Habsiguda', 120, 31)
+      doc.text('Habsiguda-Nacharam Road,', 120, 36)
+      doc.text('Hyderabad, Telangana', 120, 41)
+      doc.text('Contact No : +91 70321 70323', 120, 46)
+      doc.text('Email Id : madhavan@designbhk.com', 120, 51)
+
+      // Try embedding Logo on the left
+      try {
+        const logoImg = await loadImage('/icon.png')
+        doc.addImage(logoImg, 'PNG', 15, 15, 45, 45)
+      } catch (e) {
+        doc.setDrawColor(200, 200, 200)
+        doc.rect(15, 15, 45, 45)
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(12)
+        doc.text('DesignBHK', 22, 40)
+      }
+
+      // 2. PREPARED FOR & METADATA SECTION
+      let y = 68
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9.5)
+      doc.setTextColor(40, 40, 40)
+      doc.text('Prepared for', 15, y)
+      
+      y += 5
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+      doc.setTextColor(17, 17, 17)
+      doc.text(submission.projectName, 15, y)
+
+      y += 5
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9.5)
+      doc.setTextColor(60, 60, 60)
+      doc.text(`Designer: ${submission.designerName}`, 15, y)
+
+      y += 8
+      doc.text(formatDate(submission.createdAt), 15, y)
+
+      y += 5
+      doc.setFont('helvetica', 'bold')
+      doc.text(`Ref: DESIGNBHK-${submission.id.substring(0, 14).toUpperCase()}`, 15, y)
+
+      // 3. TITLE HEADER: Estimate
+      y += 15
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(18)
+      doc.setTextColor(180, 50, 60) // Burgundy red matching target
+      const titleWidth = doc.getTextWidth('Estimate')
+      doc.text('Estimate', (210 - titleWidth) / 2, y)
+
       y += 8
 
-      // Check for reference images
+      // 4. ITEMS TABLE HEADER
+      const tableLeft = 15
+      const colWidths = [10, 62, 38, 14, 20, 14, 22]
+      const colX = [
+        tableLeft,
+        tableLeft + 10,
+        tableLeft + 72,
+        tableLeft + 110,
+        tableLeft + 124,
+        tableLeft + 144,
+        tableLeft + 158
+      ]
+
+      const drawTableHeader = (currY: number) => {
+        doc.setDrawColor(180, 180, 180)
+        doc.setFillColor(255, 255, 255)
+        doc.rect(tableLeft, currY, 180, 10, 'F')
+        doc.line(tableLeft, currY, tableLeft + 180, currY)
+        doc.line(tableLeft, currY + 10, tableLeft + 180, currY + 10)
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(9)
+        doc.setTextColor(17, 17, 17)
+
+        doc.text('S.No', colX[0] + 2, currY + 6.5)
+        doc.text('Description', colX[1] + 2, currY + 6.5)
+        doc.text('Image', colX[2] + 13, currY + 6.5)
+        doc.text('UOM', colX[3] + 2, currY + 6.5)
+        doc.text('USP', colX[4] + 2, currY + 6.5)
+        doc.text('QTY', colX[5] + 2, currY + 6.5)
+        doc.text('Price', colX[6] + 2, currY + 6.5)
+
+        for (let i = 0; i <= colWidths.length; i++) {
+          const xPos = i === colWidths.length ? tableLeft + 180 : colX[i]
+          doc.line(xPos, currY, xPos, currY + 10)
+        }
+      }
+
+      drawTableHeader(y)
+      y += 10
+
       const refImages = parseReferenceImages(submission.referenceImage)
 
-      if (refImages.length > 0) {
-        doc.setFontSize(12)
-        doc.setFont('helvetica', 'bold')
-        doc.text(`Reference Images (${refImages.length})`, 15, y)
-        y += 6
-
-        let xOffset = 15
-        for (let i = 0; i < refImages.length; i++) {
-          try {
-            const img = await loadImage(refImages[i])
-            if (xOffset + 35 > 195) {
-              xOffset = 15
-              y += 30
-            }
-            if (y + 28 > 270) {
-              doc.addPage()
-              y = 20
-              xOffset = 15
-            }
-            doc.addImage(img, 'JPEG', xOffset, y, 32, 24)
-            xOffset += 36
-          } catch (e) {
-            console.warn('Could not embed reference image in PDF:', e)
-          }
-        }
-        y += 30
-      }
-
-      if (y + 20 > 270) {
-        doc.addPage()
-        y = 20
-      }
-
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Project Specifications', 15, y)
-      y += 6
-
-      doc.setFillColor(245, 245, 245)
-      doc.rect(15, y, 180, 8, 'F')
-
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Description', 18, y + 5)
-      doc.text('Size (SFT)', 125, y + 5)
-      doc.text('Qty', 165, y + 5)
-
-      y += 8
-      doc.setFont('helvetica', 'normal')
+      // 5. RENDER ITEMS
+      let totalAmount = 0
 
       for (let index = 0; index < submission.items.length; index++) {
         const item = submission.items[index]
-        const hasUnitImage = !!item.image
-        const hasNotes = !!item.notes
-        const rowHeight = hasUnitImage || hasNotes ? 26 : 12
+        const itemImgSrc = item.image || (refImages[index] || refImages[0] || null)
+
+        const linePrice = 0
+        totalAmount += linePrice
+
+        doc.setFontSize(8)
+        const areaCategoryText = `Area: All Area , Category: ${item.itemType || 'Wood Work'}`
+        const mainDescLines = doc.splitTextToSize(item.description, 58)
+        const notesLines = item.notes ? doc.splitTextToSize(`Note: ${item.notes}`, 58) : []
+        const coreFinishText = [item.coreMaterial, item.externalFinish].filter(Boolean).join(', ')
+
+        const contentHeight = 12 + (mainDescLines.length * 3.5) + (notesLines.length * 3.5) + (coreFinishText ? 4 : 0)
+        const rowHeight = Math.max(contentHeight, 28)
 
         if (y + rowHeight > 270) {
           doc.addPage()
           y = 20
+          drawTableHeader(y)
+          y += 10
         }
 
-        if (index % 2 === 1) {
-          doc.setFillColor(250, 250, 250)
-          doc.rect(15, y, 180, rowHeight, 'F')
+        const rowStartY = y
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8.5)
+        doc.setTextColor(17, 17, 17)
+        doc.text(String(index + 1), colX[0] + 3, y + 6)
+
+        let descY = y + 5
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8.5)
+        doc.setTextColor(180, 50, 60)
+        doc.text(item.itemType || item.description.substring(0, 25), colX[1] + 2, descY)
+
+        descY += 4.5
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(7.5)
+        doc.setTextColor(60, 60, 60)
+        doc.text(areaCategoryText, colX[1] + 2, descY)
+
+        descY += 4
+        doc.setTextColor(30, 30, 30)
+        doc.text(mainDescLines, colX[1] + 2, descY)
+        descY += (mainDescLines.length * 3.5)
+
+        if (notesLines.length > 0) {
+          doc.setTextColor(100, 100, 100)
+          doc.text(notesLines, colX[1] + 2, descY)
+          descY += (notesLines.length * 3.5)
         }
 
-        let descX = 18
-        if (hasUnitImage && item.image) {
+        if (coreFinishText) {
+          doc.setFont('helvetica', 'bold')
+          doc.setTextColor(40, 40, 40)
+          doc.text(coreFinishText, colX[1] + 2, descY + 1)
+        }
+
+        if (itemImgSrc) {
           try {
-            const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 3, 22, 18)
-            descX = 43
+            const unitImg = await loadImage(itemImgSrc)
+            doc.addImage(unitImg, 'JPEG', colX[2] + 2, rowStartY + 3, 34, 22)
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }
         }
 
-        const maxDescLen = hasUnitImage ? 42 : 58
-        const desc = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
-
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8.5)
-        const titleY = hasNotes ? y + 8 : y + (hasUnitImage ? 13 : 7)
-        doc.text(desc, descX, titleY)
-
-        if (hasNotes && item.notes) {
-          doc.setFont('helvetica', 'normal')
-          doc.setFontSize(7.5)
-          doc.setTextColor(110, 110, 110)
-          const notesText = item.notes.length > 55 ? item.notes.substring(0, 52) + '...' : item.notes
-          doc.text(`Note: ${notesText}`, descX, titleY + 6)
-          doc.setTextColor(17, 17, 17)
-        }
-
         doc.setFont('helvetica', 'normal')
-        doc.setFontSize(8.5)
-        doc.text(String(item.sft || '-'), 125, titleY)
-        doc.text(String(item.quantity), 165, titleY)
+        doc.setFontSize(8)
+        doc.setTextColor(17, 17, 17)
+
+        const uomText = item.sft ? 'Sq ft' : 'Nos'
+        doc.text(uomText, colX[3] + 2, rowStartY + 10)
+        doc.text('-', colX[4] + 5, rowStartY + 10)
+        doc.text(String(item.quantity), colX[5] + 3, rowStartY + 10)
+        doc.text('-', colX[6] + 5, rowStartY + 10)
+
+        doc.setDrawColor(200, 200, 200)
+        doc.rect(tableLeft, rowStartY, 180, rowHeight)
+
+        for (let i = 0; i <= colWidths.length; i++) {
+          const xPos = i === colWidths.length ? tableLeft + 180 : colX[i]
+          doc.line(xPos, rowStartY, xPos, rowStartY + rowHeight)
+        }
 
         y += rowHeight
       }
 
-      // Divider Line
-      doc.setDrawColor(220, 220, 220)
-      doc.line(15, y + 2, 195, y + 2)
       y += 10
 
-      // Terms and Conditions Block
-      if (y + 45 > 270) {
+      // 6. SUMMARY SECTION
+      if (y + 55 > 270) {
         doc.addPage()
         y = 20
       }
 
-      doc.setDrawColor(230, 230, 230)
-      doc.setFillColor(252, 252, 252)
-      doc.roundedRect(15, y, 180, 40, 3, 3, 'FD')
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(14)
+      doc.setTextColor(180, 50, 60)
+      doc.text('Summary', 15, y)
+      y += 6
+
+      const sumLeft = 15
+      const sumWidths = [12, 60, 25, 40, 43]
+      const sumX = [sumLeft, sumLeft + 12, sumLeft + 72, sumLeft + 97, sumLeft + 137]
+
+      doc.setDrawColor(180, 180, 180)
+      doc.setFillColor(255, 255, 255)
+      doc.rect(sumLeft, y, 165, 8)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.setTextColor(17, 17, 17)
+
+      doc.text('S.No', sumX[0] + 2, y + 5.5)
+      doc.text('Name', sumX[1] + 2, y + 5.5)
+      doc.text('Quantity', sumX[2] + 2, y + 5.5)
+      doc.text('Price', sumX[3] + 2, y + 5.5)
+      doc.text('Total', sumX[4] + 2, y + 5.5)
+
+      for (let i = 0; i <= sumWidths.length; i++) {
+        const xPos = i === sumWidths.length ? sumLeft + 165 : sumX[i]
+        doc.line(xPos, y, xPos, y + 8)
+      }
+
+      y += 8
+      doc.rect(sumLeft, y, 165, 8)
+      doc.setFont('helvetica', 'normal')
+      doc.text('1', sumX[0] + 4, y + 5.5)
+      doc.text('Items', sumX[1] + 2, y + 5.5)
+      doc.text(String(submission.items.length), sumX[2] + 4, y + 5.5)
+      doc.text('-', sumX[3] + 5, y + 5.5)
+      doc.text('-', sumX[4] + 5, y + 5.5)
+
+      for (let i = 0; i <= sumWidths.length; i++) {
+        const xPos = i === sumWidths.length ? sumLeft + 165 : sumX[i]
+        doc.line(xPos, y, xPos, y + 8)
+      }
+
+      y += 8
+      doc.rect(sumLeft + 72, y, 93, 8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Initial Total', sumX[3] - 20, y + 5.5)
+      doc.text(submission.designerBudget ? `INR ${submission.designerBudget.toLocaleString('en-IN')}` : '-', sumX[4] + 2, y + 5.5)
+      doc.line(sumX[4], y, sumX[4], y + 8)
+
+      y += 8
+      doc.rect(sumLeft + 72, y, 93, 8)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(180, 50, 60)
+      doc.text('Final Total', sumX[3] - 20, y + 5.5)
+      doc.text(submission.designerBudget ? `INR ${submission.designerBudget.toLocaleString('en-IN')}` : '-', sumX[4] + 2, y + 5.5)
+      doc.line(sumX[4], y, sumX[4], y + 8)
+
+      y += 16
+
+      // 7. TERMS AND CONDITIONS SECTION
+      if (y + 80 > 270) {
+        doc.addPage()
+        y = 20
+      }
 
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.setTextColor(50, 50, 50)
-      doc.text('TERMS & CONDITIONS', 20, y + 8)
+      doc.setFontSize(14)
+      doc.setTextColor(180, 50, 60)
+      doc.text('Terms And Conditions', 15, y)
+      y += 8
 
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.5)
-      doc.setTextColor(100, 100, 100)
-      
-      const terms = [
-        '1. Specification Finality: Item specifications and dimensions provided in this document are subject to final site audit.',
-        '2. Distribution: Submissions distributed to verified brand partners will receive itemized pricing matrix quotes.',
-        '3. Revisions: Design adjustments or specification changes must be submitted prior to brand quote acceptance.',
-        '4. Execution Timeline: Expected completion schedules will be furnished upon final approval of brand quotations.',
-        '5. Support: For queries regarding this submission, contact DesignBHK partner support.',
+      const termsList = [
+        { title: 'Validity', desc: 'This quotation is valid for 15 (fifteen) days from the date of issue. Prices, materials, and availability are subject to change thereafter without prior notice.' },
+        { title: 'Scope & Changes', desc: 'The quotation is based on specifications shared by Client. Any changes requested after acceptance will be treated as extra work and charged separately.' },
+        { title: 'Payments', desc: 'Payment terms will follow agreed milestone schedule. Work will commence after advance payment.' },
+        { title: 'Materials & Third-Party Vendors', desc: 'Rates for materials are as quoted at preparation time. Any market fluctuation will be borne by Client.' },
+        { title: 'Timelines', desc: 'Estimated timelines are indicative (Standard delivery within 45 working days from design finalization).' },
+        { title: 'Ownership & Acceptance', desc: 'All drawings and designs remain intellectual property until full payment is received. Approval confirms acceptance of terms.' }
       ]
 
-      let termY = y + 15
-      terms.forEach((term) => {
-        doc.text(term, 20, termY)
-        termY += 5.2
+      doc.setFontSize(8.5)
+      termsList.forEach(t => {
+        if (y + 12 > 270) {
+          doc.addPage()
+          y = 20
+        }
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(17, 17, 17)
+        doc.text(t.title, 15, y)
+        y += 4
+
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(70, 70, 70)
+        const lines = doc.splitTextToSize(`• ${t.desc}`, 175)
+        doc.text(lines, 18, y)
+        y += (lines.length * 3.8) + 3
       })
 
       doc.save(`Submission-${submission.projectName.replace(/\s+/g, '_')}.pdf`)

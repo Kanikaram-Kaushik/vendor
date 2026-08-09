@@ -127,71 +127,7 @@ function QuotationDetail({ id }: { id: string }) {
       const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
 
-      // Set Font
-      doc.setFont('helvetica', 'normal')
-
-      // Header Banner
-      doc.setFillColor(17, 17, 17)
-      doc.rect(0, 0, 210, 30, 'F')
-
-      // Header Title
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(18)
-      doc.setFont('helvetica', 'bold')
-      doc.text('DESIGNBHK', 15, 20)
-
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      doc.text('BRAND QUOTATION', 165, 20)
-
-      // Reset text color to primary
-      doc.setTextColor(17, 17, 17)
-
-      // Section: Details Block
-      doc.setFontSize(14)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Quotation Details', 15, 45)
-
-      // Metadata Info left
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Brand Name:', 15, 55)
-      doc.setFont('helvetica', 'normal')
-      doc.text(quotation.brandName, 42, 55)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Brand Email:', 15, 62)
-      doc.setFont('helvetica', 'normal')
-      doc.text(quotation.brandEmail, 42, 62)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Date Received:', 15, 69)
-      doc.setFont('helvetica', 'normal')
-      doc.text(formatDate(quotation.createdAt), 45, 69)
-
-      // Metadata Info right
-      doc.setFont('helvetica', 'bold')
-      doc.text('Project Name:', 110, 55)
-      doc.setFont('helvetica', 'normal')
-      doc.text(quotation.projectName, 138, 55)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Status:', 110, 62)
-      doc.setFont('helvetica', 'normal')
-      doc.text(quotation.status, 138, 62)
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Designer Budget:', 110, 69)
-      doc.setFont('helvetica', 'normal')
-      doc.text(quotation.designerBudget ? `INR ${quotation.designerBudget.toLocaleString('en-IN')}` : 'No Budget Set', 142, 69)
-
-      // Divider Line
-      doc.setDrawColor(220, 220, 220)
-      doc.line(15, 78, 195, 78)
-
-      let y = 87
-
-      // Helper function to load image to HTMLImageElement
+      // Helper function to load image
       const loadImage = (url: string): Promise<HTMLImageElement> => {
         return new Promise((resolve, reject) => {
           const img = new Image()
@@ -202,180 +138,327 @@ function QuotationDetail({ id }: { id: string }) {
         })
       }
 
-      const refImages = parseReferenceImages(quotation.referenceImage)
+      // 1. TOP HEADER (Brand / Showroom Info)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(16)
+      doc.setTextColor(17, 17, 17)
+      doc.text('DesignBHK', 120, 20)
 
-      // Section: Itemized Rates Header
-      if (y + 20 > 270) {
-        doc.addPage()
-        y = 20
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(60, 60, 60)
+      doc.text('Experience Centre Showroom', 120, 26)
+      doc.text('Beside Kotak Mahindra Bank, Habsiguda', 120, 31)
+      doc.text('Habsiguda-Nacharam Road,', 120, 36)
+      doc.text('Hyderabad, Telangana', 120, 41)
+      doc.text('Contact No : +91 70321 70323', 120, 46)
+      doc.text(`Email Id : ${quotation.brandEmail || 'madhavan@designbhk.com'}`, 120, 51)
+
+      // Try embedding Logo on the left
+      try {
+        const logoImg = await loadImage('/icon.png')
+        doc.addImage(logoImg, 'PNG', 15, 15, 45, 45)
+      } catch (e) {
+        // Fallback text logo box if icon load fails
+        doc.setDrawColor(200, 200, 200)
+        doc.rect(15, 15, 45, 45)
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(12)
+        doc.text('DesignBHK', 22, 40)
       }
 
-      doc.setFontSize(12)
+      // 2. PREPARED FOR & METADATA SECTION
+      let y = 68
       doc.setFont('helvetica', 'bold')
-      doc.text('Itemized Specifications', 15, y)
-      y += 6
-
-      // Table Header: Image | Description | Size (SFT) | Qty | Rate/SFT | Total
-      doc.setFillColor(245, 245, 245)
-      doc.rect(15, y, 180, 8, 'F')
-
-      doc.setFontSize(9)
+      doc.setFontSize(9.5)
+      doc.setTextColor(40, 40, 40)
+      doc.text('Prepared for', 15, y)
+      
+      y += 5
       doc.setFont('helvetica', 'bold')
-      doc.text('Image', 18, y + 5)
-      doc.text('Description', 45, y + 5)
-      doc.text('Size (SFT)', 120, y + 5)
-      doc.text('Qty', 142, y + 5)
-      doc.text('Rate/SFT', 155, y + 5)
-      doc.text('Total', 180, y + 5)
+      doc.setFontSize(11)
+      doc.setTextColor(17, 17, 17)
+      doc.text(quotation.projectName, 15, y)
+
+      y += 5
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9.5)
+      doc.setTextColor(60, 60, 60)
+      doc.text(`Designer: ${quotation.brandName}`, 15, y)
 
       y += 8
-      doc.setFont('helvetica', 'normal')
+      doc.text(formatDate(quotation.createdAt), 15, y)
 
-      const ITEM_DESCRIPTIONS: Record<string, string> = {
-        'Tv Cabinet': 'Storage or media unit for TV and entertainment equipment with cable management.',
-        'Crockery Unit': 'Glass or solid door display cabinet for dining area tableware and glassware.',
-        'Puja Unit': 'Sacred shrine unit designed for daily prayers, brass items, and idols.',
-        'Partition': 'Divider screen or open shelving unit to create visual zones in living/dining areas.',
-        'Wardrobe': 'Bedroom clothing storage unit with hanging rods, drawers, and shelves.',
-        'Tv Unit': 'Wall-mounted or standing bedroom/living room TV backdrop panel and console.',
-        'Study Unit': 'Work desk with overhead shelving or drawer storage for laptops and books.',
-        'Bed': 'Custom bed frame structure with optional headboard and under-bed storage.',
-        'Bedside Table': 'Compact nightstand for beside-the-bed lighting, books, and daily essentials.',
-        'Dressing Unit': 'Mirror frame unit with dedicated vanity drawers and cosmetics storage.',
-        'Base Unit (Kitchen)': 'Under-counter kitchen storage cabinets housing sinks, drawers, and pullouts.',
-        'Wall Unit (Kitchen)': 'Over-counter wall-mounted kitchen cabinets for spices, dishes, and groceries.',
-        'Loft': 'Top-tier overhead storage cabinets above wardrobes or kitchen wall units.',
-        'Tall units (Kitchen)': 'Full-height kitchen pantry cabinet for appliances (oven, microwave) and groceries.',
-        'Shoerack': 'Entryway footwear storage console with ventilation and seating options.'
+      y += 5
+      doc.setFont('helvetica', 'bold')
+      doc.text(`Ref: DESIGNBHK-${quotation.id.substring(0, 14).toUpperCase()}`, 15, y)
+
+      // 3. TITLE HEADER: Estimate
+      y += 15
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(18)
+      doc.setTextColor(180, 50, 60) // Burgundy red matching target
+      const titleWidth = doc.getTextWidth('Estimate')
+      doc.text('Estimate', (210 - titleWidth) / 2, y)
+
+      y += 8
+
+      // 4. ITEMS TABLE HEADER
+      // Columns: S.No (10), Description (60), Image (35), UOM (15), USP (22), QTY (15), Price (23) -> Total = 180
+      const tableLeft = 15
+      const colWidths = [10, 62, 38, 14, 20, 14, 22]
+      const colX = [
+        tableLeft,
+        tableLeft + 10,
+        tableLeft + 72,
+        tableLeft + 110,
+        tableLeft + 124,
+        tableLeft + 144,
+        tableLeft + 158
+      ]
+
+      const drawTableHeader = (currY: number) => {
+        doc.setDrawColor(180, 180, 180)
+        doc.setFillColor(255, 255, 255)
+        doc.rect(tableLeft, currY, 180, 10, 'F')
+        doc.line(tableLeft, currY, tableLeft + 180, currY)
+        doc.line(tableLeft, currY + 10, tableLeft + 180, currY + 10)
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(9)
+        doc.setTextColor(17, 17, 17)
+
+        doc.text('S.No', colX[0] + 2, currY + 6.5)
+        doc.text('Description', colX[1] + 2, currY + 6.5)
+        doc.text('Image', colX[2] + 13, currY + 6.5)
+        doc.text('UOM', colX[3] + 2, currY + 6.5)
+        doc.text('USP', colX[4] + 2, currY + 6.5)
+        doc.text('QTY', colX[5] + 2, currY + 6.5)
+        doc.text('Price', colX[6] + 2, currY + 6.5)
+
+        // Draw vertical grid lines for header
+        for (let i = 0; i <= colWidths.length; i++) {
+          const xPos = i === colWidths.length ? tableLeft + 180 : colX[i]
+          doc.line(xPos, currY, xPos, currY + 10)
+        }
       }
 
-      // Items loop with unit image rendered directly in the Image column inside the table
+      drawTableHeader(y)
+      y += 10
+
+      const refImages = parseReferenceImages(quotation.referenceImage)
+
+      // 5. RENDER ITEMS
+      let totalAmount = 0
+
       for (let index = 0; index < quotation.items.length; index++) {
         const item = quotation.items[index]
         const itemImgSrc = item.image || (refImages[index] || refImages[0] || null)
-        const hasUnitImage = !!itemImgSrc
 
-        let itemPurpose = ''
-        if (item.itemType && ITEM_DESCRIPTIONS[item.itemType]) {
-          itemPurpose = ITEM_DESCRIPTIONS[item.itemType]
-        } else {
-          for (const [typeName, descStr] of Object.entries(ITEM_DESCRIPTIONS)) {
-            if (item.description.toLowerCase().includes(typeName.toLowerCase())) {
-              itemPurpose = descStr
-              break
-            }
-          }
-        }
+        const linePrice = item.pricePerSft && item.sft ? item.sft * item.quantity * item.pricePerSft : 0
+        totalAmount += linePrice
 
-        const subDetail = item.notes ? item.notes : itemPurpose
-        const rowHeight = hasUnitImage ? 24 : (subDetail ? 16 : 10)
+        // Wrap description text
+        doc.setFontSize(8)
+        const areaCategoryText = `Area: All Area , Category: ${item.itemType || 'Wood Work'}`
+        const mainDescLines = doc.splitTextToSize(item.description, 58)
+        const notesLines = item.notes ? doc.splitTextToSize(`Note: ${item.notes}`, 58) : []
+        const coreFinishText = [item.coreMaterial, item.externalFinish].filter(Boolean).join(', ')
+
+        const contentHeight = 12 + (mainDescLines.length * 3.5) + (notesLines.length * 3.5) + (coreFinishText ? 4 : 0)
+        const rowHeight = Math.max(contentHeight, 28)
 
         if (y + rowHeight > 270) {
           doc.addPage()
           y = 20
+          drawTableHeader(y)
+          y += 10
         }
 
-        if (index % 2 === 1) {
-          doc.setFillColor(250, 250, 250)
-          doc.rect(15, y, 180, rowHeight, 'F')
-        }
+        const rowStartY = y
 
-        // Draw image inside the Image column
-        if (hasUnitImage && itemImgSrc) {
-          try {
-            const unitImg = await loadImage(itemImgSrc)
-            doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
-          } catch (e) {
-            console.warn('Could not embed unit image in PDF table row:', e)
-          }
-        } else {
-          doc.setFontSize(8)
-          doc.setTextColor(150, 150, 150)
-          doc.text('-', 25, y + 6)
-          doc.setTextColor(17, 17, 17)
-        }
-
-        const maxDescLen = 38
-        const titleText = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
-        const titleY = subDetail ? y + 6 : y + (hasUnitImage ? 12 : 6)
-
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8.5)
-        doc.text(titleText, 45, titleY)
-
-        if (subDetail) {
-          doc.setFont('helvetica', 'normal')
-          doc.setFontSize(7.5)
-          doc.setTextColor(110, 110, 110)
-          const subText = subDetail.length > 42 ? subDetail.substring(0, 39) + '...' : subDetail
-          doc.text(subText, 45, titleY + 5)
-          doc.setTextColor(17, 17, 17)
-        }
-
+        // Render S.No
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(8.5)
-        const numberY = subDetail && !hasUnitImage ? y + 8 : (hasUnitImage ? y + 12 : y + 6)
-        doc.text(String(item.sft), 120, numberY)
-        doc.text(String(item.quantity), 142, numberY)
-        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, numberY)
+        doc.setTextColor(17, 17, 17)
+        doc.text(String(index + 1), colX[0] + 3, y + 6)
 
-        const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
-        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, numberY)
+        // Render Description
+        let descY = y + 5
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8.5)
+        doc.setTextColor(180, 50, 60) // Red title for item
+        doc.text(item.itemType || item.description.substring(0, 25), colX[1] + 2, descY)
+
+        descY += 4.5
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(7.5)
+        doc.setTextColor(60, 60, 60)
+        doc.text(areaCategoryText, colX[1] + 2, descY)
+
+        descY += 4
+        doc.setTextColor(30, 30, 30)
+        doc.text(mainDescLines, colX[1] + 2, descY)
+        descY += (mainDescLines.length * 3.5)
+
+        if (notesLines.length > 0) {
+          doc.setTextColor(100, 100, 100)
+          doc.text(notesLines, colX[1] + 2, descY)
+          descY += (notesLines.length * 3.5)
+        }
+
+        if (coreFinishText) {
+          doc.setFont('helvetica', 'bold')
+          doc.setTextColor(40, 40, 40)
+          doc.text(coreFinishText, colX[1] + 2, descY + 1)
+        }
+
+        // Render Image inside column 2
+        if (itemImgSrc) {
+          try {
+            const unitImg = await loadImage(itemImgSrc)
+            doc.addImage(unitImg, 'JPEG', colX[2] + 2, rowStartY + 3, 34, 22)
+          } catch (e) {
+            console.warn('Could not embed unit image in PDF:', e)
+          }
+        }
+
+        // Render UOM, USP, QTY, Price
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8)
+        doc.setTextColor(17, 17, 17)
+
+        const uomText = item.sft ? 'Sq ft' : 'Nos'
+        doc.text(uomText, colX[3] + 2, rowStartY + 10)
+
+        const uspText = item.pricePerSft ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-'
+        doc.text(uspText, colX[4] + 1, rowStartY + 10)
+
+        doc.text(String(item.quantity), colX[5] + 3, rowStartY + 10)
+
+        const priceText = linePrice > 0 ? `INR ${linePrice.toLocaleString('en-IN')}` : '-'
+        doc.text(priceText, colX[6] + 1, rowStartY + 10)
+
+        // Row Grid & Border
+        doc.setDrawColor(200, 200, 200)
+        doc.rect(tableLeft, rowStartY, 180, rowHeight)
+
+        for (let i = 0; i <= colWidths.length; i++) {
+          const xPos = i === colWidths.length ? tableLeft + 180 : colX[i]
+          doc.line(xPos, rowStartY, xPos, rowStartY + rowHeight)
+        }
 
         y += rowHeight
       }
 
-      // Divider Line
-      doc.setDrawColor(220, 220, 220)
-      doc.line(15, y + 2, 195, y + 2)
+      y += 10
+
+      // 6. SUMMARY SECTION
+      if (y + 55 > 270) {
+        doc.addPage()
+        y = 20
+      }
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(14)
+      doc.setTextColor(180, 50, 60)
+      doc.text('Summary', 15, y)
+      y += 6
+
+      // Summary Table Header
+      const sumLeft = 15
+      const sumWidths = [12, 60, 25, 40, 43]
+      const sumX = [sumLeft, sumLeft + 12, sumLeft + 72, sumLeft + 97, sumLeft + 137]
+
+      doc.setDrawColor(180, 180, 180)
+      doc.setFillColor(255, 255, 255)
+      doc.rect(sumLeft, y, 165, 8)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.setTextColor(17, 17, 17)
+
+      doc.text('S.No', sumX[0] + 2, y + 5.5)
+      doc.text('Name', sumX[1] + 2, y + 5.5)
+      doc.text('Quantity', sumX[2] + 2, y + 5.5)
+      doc.text('Price', sumX[3] + 2, y + 5.5)
+      doc.text('Total', sumX[4] + 2, y + 5.5)
+
+      for (let i = 0; i <= sumWidths.length; i++) {
+        const xPos = i === sumWidths.length ? sumLeft + 165 : sumX[i]
+        doc.line(xPos, y, xPos, y + 8)
+      }
+
+      y += 8
+      // Items Summary Row
+      doc.rect(sumLeft, y, 165, 8)
+      doc.setFont('helvetica', 'normal')
+      doc.text('1', sumX[0] + 4, y + 5.5)
+      doc.text('Items', sumX[1] + 2, y + 5.5)
+      doc.text(String(quotation.items.length), sumX[2] + 4, y + 5.5)
+      doc.text(`INR ${totalAmount.toLocaleString('en-IN')}`, sumX[3] + 2, y + 5.5)
+      doc.text(`INR ${totalAmount.toLocaleString('en-IN')}`, sumX[4] + 2, y + 5.5)
+
+      for (let i = 0; i <= sumWidths.length; i++) {
+        const xPos = i === sumWidths.length ? sumLeft + 165 : sumX[i]
+        doc.line(xPos, y, xPos, y + 8)
+      }
+
+      y += 8
+      // Initial Total Row
+      doc.rect(sumLeft + 72, y, 93, 8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Initial Total', sumX[3] - 20, y + 5.5)
+      doc.text(`INR ${totalAmount.toLocaleString('en-IN')}`, sumX[4] + 2, y + 5.5)
+      doc.line(sumX[4], y, sumX[4], y + 8)
+
+      y += 8
+      // Final Total Row
+      doc.rect(sumLeft + 72, y, 93, 8)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(180, 50, 60)
+      doc.text('Final Total', sumX[3] - 20, y + 5.5)
+      doc.text(`INR ${totalAmount.toLocaleString('en-IN')}`, sumX[4] + 2, y + 5.5)
+      doc.line(sumX[4], y, sumX[4], y + 8)
+
+      y += 16
+
+      // 7. TERMS AND CONDITIONS SECTION
+      if (y + 80 > 270) {
+        doc.addPage()
+        y = 20
+      }
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(14)
+      doc.setTextColor(180, 50, 60)
+      doc.text('Terms And Conditions', 15, y)
       y += 8
 
-      // Estimated Brand Total
-      if (quotation.totalPrice !== null) {
+      const termsList = [
+        { title: 'Validity', desc: 'This quotation is valid for 15 (fifteen) days from the date of issue. Prices, materials, and availability are subject to change thereafter without prior notice.' },
+        { title: 'Scope & Changes', desc: 'The quotation is based on specifications shared by Client. Any changes requested after acceptance will be treated as extra work and charged separately.' },
+        { title: 'Payments', desc: 'Payment terms will follow agreed milestone schedule. Work will commence after advance payment.' },
+        { title: 'Materials & Third-Party Vendors', desc: 'Rates for materials are as quoted at preparation time. Any market fluctuation will be borne by Client.' },
+        { title: 'Timelines', desc: 'Estimated timelines are indicative (Standard delivery within 45 working days from design finalization).' },
+        { title: 'Ownership & Acceptance', desc: 'All drawings and designs remain intellectual property until full payment is received. Approval confirms acceptance of terms.' }
+      ]
+
+      doc.setFontSize(8.5)
+      termsList.forEach(t => {
         if (y + 12 > 270) {
           doc.addPage()
           y = 20
         }
         doc.setFont('helvetica', 'bold')
-        doc.setFontSize(11)
-        doc.text('Estimated Brand Total:', 110, y)
-        doc.text(`INR ${quotation.totalPrice.toLocaleString('en-IN')}`, 160, y)
-        y += 14
-      } else {
-        y += 6
-      }
+        doc.setTextColor(17, 17, 17)
+        doc.text(t.title, 15, y)
+        y += 4
 
-      // Terms and Conditions Block
-      if (y + 45 > 270) {
-        doc.addPage()
-        y = 20
-      }
-
-      doc.setDrawColor(230, 230, 230)
-      doc.setFillColor(252, 252, 252)
-      doc.roundedRect(15, y, 180, 40, 3, 3, 'FD')
-
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.setTextColor(50, 50, 50)
-      doc.text('TERMS & CONDITIONS', 20, y + 8)
-
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.5)
-      doc.setTextColor(100, 100, 100)
-      
-      const terms = [
-        '1. Validity: This quotation is valid for 30 days from the date of issuance.',
-        '2. Payment Schedule: 50% advance upon approval, 40% prior to dispatch, 10% post installation.',
-        '3. Taxes & Freight: Prices are inclusive of applicable GST unless specified otherwise. Transportation extra as actuals.',
-        '4. Variations: Any changes in site dimensions, materials, or scope will be re-quoted accordingly.',
-        '5. Warranty: Standard 5-year manufacturer warranty applies on hardware and core materials as per brand guidelines.',
-      ]
-
-      let termY = y + 15
-      terms.forEach((term) => {
-        doc.text(term, 20, termY)
-        termY += 5.2
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(70, 70, 70)
+        const lines = doc.splitTextToSize(`• ${t.desc}`, 175)
+        doc.text(lines, 18, y)
+        y += (lines.length * 3.8) + 3
       })
 
       // Save Document
