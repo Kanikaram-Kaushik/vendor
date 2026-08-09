@@ -510,8 +510,18 @@ export default function NewSubmissionPage() {
               )
             )}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Quantity (Nos)</label>
-              <input type="number" min="1" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={qty} onChange={e => setQty(Number(e.target.value))} />
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                {(itemType === 'Electrical' || itemType === 'Plumbing') ? 'Number of Units / Points (Nos)' : 'Quantity (Nos)'}
+              </label>
+              <input
+                type="number"
+                min="1"
+                className="form-input"
+                style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }}
+                value={qty}
+                onChange={e => setQty(Number(e.target.value))}
+                placeholder={(itemType === 'Electrical' || itemType === 'Plumbing') ? 'e.g. 15 points / units' : 'e.g. 1'}
+              />
             </div>
           </div>
 

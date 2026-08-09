@@ -901,6 +901,78 @@ input, select, textarea { font-family: inherit; }
 .ml-auto { margin-left: auto; }
 .w-full { width: 100%; }
 
+/*  Mobile & Touch Responsive Styles  */
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 220px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-nav {
+    display: flex;
+    overflow-x: auto;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .nav-item {
+    white-space: nowrap;
+    margin-bottom: 0;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+
+  .page-header {
+    padding: 16px 18px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .page-body {
+    padding: 16px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  /* Make forms and grid layouts stack cleanly on small mobile screens */
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  div[style*="display: flex"][style*="justify-content: space-between"] {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .form-actions button,
+  .form-actions a {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /*  Print Styles  */
 @media print {
   .sidebar,
