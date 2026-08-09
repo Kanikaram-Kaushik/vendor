@@ -79,6 +79,7 @@ export default function NewSubmissionPage() {
   const [hardware, setHardware] = useState(HARDWARES[0])
   const [width, setWidth] = useState<number | ''>(5)
   const [length, setLength] = useState<number | ''>(2)
+  const [directSft, setDirectSft] = useState<number | ''>(10)
   const [qty, setQty] = useState(1)
   const [itemNotes, setItemNotes] = useState('')
   const [itemImage, setItemImage] = useState('')
@@ -129,30 +130,41 @@ export default function NewSubmissionPage() {
   }
 
   function addItem() {
-    if (!width || Number(width) <= 0 || !length || Number(length) <= 0) {
-      setError('Please enter a valid Width and Length (greater than 0).')
+    const finalItemType = itemType === 'OTHER_CUSTOM' ? customItemType.trim() : itemType
+    if (!finalItemType) {
+      setError('Please enter a custom item type name.')
       return
     }
     if (qty <= 0) {
       setError('Quantity must be greater than 0.')
       return
     }
-    const finalItemType = itemType === 'OTHER_CUSTOM' ? customItemType.trim() : itemType
-    if (!finalItemType) {
-      setError('Please enter a custom item type name.')
-      return
+
+    const isMEP = finalItemType === 'Electrical' || finalItemType === 'Plumbing'
+    const isNonWood = !!NON_WOOD_ITEMS[finalItemType] || itemType === 'OTHER_CUSTOM'
+
+    let sftVal: number | undefined = undefined
+
+    if (!isMEP) {
+      if (typeof directSft === 'number' && directSft > 0) {
+        sftVal = Math.round(directSft * 100) / 100
+      } else if (!isNonWood && width && length && Number(width) > 0 && Number(length) > 0) {
+        sftVal = Math.round(Number(width) * Number(length) * 100) / 100
+      } else if (!isNonWood && (!width || !length)) {
+        setError('Please enter Width and Length (or direct SFT).')
+        return
+      }
     }
+
     setError('')
 
-    const isNonWood = !!NON_WOOD_ITEMS[finalItemType]
     let description = finalItemType
-    if (!isNonWood) {
+    if (!isNonWood && !isMEP) {
       const specs = [coreMaterial, externalFinish, hardware ? `${hardware} hardware` : null].filter(Boolean)
       if (specs.length > 0) {
         description = `${finalItemType} (${specs.join(', ')})`
       }
     }
-    const sftVal = Math.round(Number(width) * Number(length) * 100) / 100
     const capturedNotes = itemNotes.trim() || ITEM_DESCRIPTIONS[finalItemType] || ''
 
     setItems([
@@ -175,6 +187,7 @@ export default function NewSubmissionPage() {
     setQty(1)
     setWidth(5)
     setLength(2)
+    setDirectSft(10)
     setItemImage('')
     setItemImageName('')
   }
@@ -442,21 +455,62 @@ export default function NewSubmissionPage() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: (itemType === 'Electrical' || itemType === 'Plumbing') ? '1fr' : (NON_WOOD_ITEMS[itemType] || itemType === 'OTHER_CUSTOM') ? '1.5fr 1fr' : '1fr 1fr 1.2fr 1fr', gap: 12, marginBottom: 16 }}>
+            {!(itemType === 'Electrical' || itemType === 'Plumbing') && (
+              (NON_WOOD_ITEMS[itemType] || itemType === 'OTHER_CUSTOM') ? (
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Area / Size (SFT)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    className="form-input"
+                    style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }}
+                    value={directSft}
+                    onChange={e => setDirectSft(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="Enter total SFT directly (optional for Nos)"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Width (Ft)</label>
+                    <input type="number" min="0.1" step="any" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={width} onChange={e => {
+                      const val = e.target.value === '' ? '' : Number(e.target.value)
+                      setWidth(val)
+                      if (val !== '' && length !== '') {
+                        setDirectSft(Math.round(Number(val) * Number(length) * 100) / 100)
+                      }
+                    }} placeholder="e.g. 5" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Length/Height (Ft)</label>
+                    <input type="number" min="0.1" step="any" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={length} onChange={e => {
+                      const val = e.target.value === '' ? '' : Number(e.target.value)
+                      setLength(val)
+                      if (val !== '' && width !== '') {
+                        setDirectSft(Math.round(Number(width) * Number(val) * 100) / 100)
+                      }
+                    }} placeholder="e.g. 2" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Total Area (SFT)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      className="form-input"
+                      style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }}
+                      value={directSft}
+                      onChange={e => setDirectSft(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="SFT"
+                    />
+                  </div>
+                </>
+              )
+            )}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Width (Ft)</label>
-              <input type="number" min="0.1" step="any" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={width} onChange={e => setWidth(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 5" />
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Length/Height (Ft)</label>
-              <input type="number" min="0.1" step="any" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={length} onChange={e => setLength(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 2" />
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Calculated Size (SFT)</label>
-              <input type="number" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6, backgroundColor: '#f3f4f6', cursor: 'not-allowed', color: '#374151', fontWeight: 600 }} value={(width && length) ? Math.round(width * length * 100) / 100 : ''} readOnly placeholder="Auto-calculated" />
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Quantity</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Quantity (Nos)</label>
               <input type="number" min="1" className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} value={qty} onChange={e => setQty(Number(e.target.value))} />
             </div>
           </div>
@@ -492,7 +546,8 @@ export default function NewSubmissionPage() {
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-primary)' }}>{item.description}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>
-                        Size: <strong style={{ color: 'var(--text-primary)' }}>{item.sft} SFT</strong> | Qty: <strong style={{ color: 'var(--text-primary)' }}>{item.quantity}</strong>
+                        {item.sft ? <>Size: <strong style={{ color: 'var(--text-primary)' }}>{item.sft} SFT</strong> | </> : null}
+                        Qty: <strong style={{ color: 'var(--text-primary)' }}>{item.quantity}</strong>
                         {item.notes && <span style={{ marginLeft: 8, fontStyle: 'italic', color: 'var(--text-muted)' }}>| Note: {item.notes}</span>}
                       </div>
                     </div>
