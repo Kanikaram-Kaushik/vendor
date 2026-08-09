@@ -262,7 +262,7 @@ function QuotationDetail({ id }: { id: string }) {
         doc.text('Description', colX[1] + 2, currY + 6.5)
         doc.text('Image', colX[2] + 13, currY + 6.5)
         doc.text('UOM', colX[3] + 2, currY + 6.5)
-        doc.text('USP', colX[4] + 2, currY + 6.5)
+        doc.text('Per Sft', colX[4] + 2, currY + 6.5)
         doc.text('QTY', colX[5] + 2, currY + 6.5)
         doc.text('Price', colX[6] + 2, currY + 6.5)
 
