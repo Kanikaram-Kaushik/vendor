@@ -231,11 +231,11 @@ function QuotationDetail({ id }: { id: string }) {
       y += 8
       doc.setFont('helvetica', 'normal')
 
-      // Items loop with unit image rendering
+      // Items loop with side-by-side unit image thumbnail rendering
       for (let index = 0; index < quotation.items.length; index++) {
         const item = quotation.items[index]
         const hasUnitImage = !!item.image
-        const rowHeight = hasUnitImage ? 32 : 12
+        const rowHeight = hasUnitImage ? 24 : 10
 
         if (y + rowHeight > 270) {
           doc.addPage()
@@ -247,23 +247,27 @@ function QuotationDetail({ id }: { id: string }) {
           doc.rect(15, y, 180, rowHeight, 'F')
         }
 
-        const desc = item.description.length > 55 ? item.description.substring(0, 52) + '...' : item.description
-        doc.text(desc, 18, y + 6)
-        doc.text(String(item.sft), 115, y + 6)
-        doc.text(String(item.quantity), 140, y + 6)
-        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, y + 6)
-
-        const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
-        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, y + 6)
-
+        let descX = 18
         if (hasUnitImage && item.image) {
           try {
             const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 9, 28, 20)
+            doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
+            descX = 43
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }
         }
+
+        const maxDescLen = hasUnitImage ? 40 : 55
+        const desc = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
+        const textY = hasUnitImage ? y + 12 : y + 6
+        doc.text(desc, descX, textY)
+        doc.text(String(item.sft), 115, textY)
+        doc.text(String(item.quantity), 140, textY)
+        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, textY)
+
+        const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
+        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, textY)
 
         y += rowHeight
       }

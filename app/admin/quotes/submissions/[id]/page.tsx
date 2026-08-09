@@ -246,7 +246,7 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       for (let index = 0; index < submission.items.length; index++) {
         const item = submission.items[index]
         const hasUnitImage = !!item.image
-        const rowHeight = hasUnitImage ? 32 : 12
+        const rowHeight = hasUnitImage ? 24 : 10
 
         if (y + rowHeight > 270) {
           doc.addPage()
@@ -258,19 +258,23 @@ function ReviewDistributeDetail({ id }: { id: string }) {
           doc.rect(15, y, 180, rowHeight, 'F')
         }
 
-        const desc = item.description.length > 60 ? item.description.substring(0, 57) + '...' : item.description
-        doc.text(desc, 18, y + 6)
-        doc.text(String(item.sft || '-'), 125, y + 6)
-        doc.text(String(item.quantity), 165, y + 6)
-
+        let descX = 18
         if (hasUnitImage && item.image) {
           try {
             const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 9, 28, 20)
+            doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
+            descX = 43
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }
         }
+
+        const maxDescLen = hasUnitImage ? 45 : 60
+        const desc = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
+        const textY = hasUnitImage ? y + 12 : y + 6
+        doc.text(desc, descX, textY)
+        doc.text(String(item.sft || '-'), 125, textY)
+        doc.text(String(item.quantity), 165, textY)
 
         y += rowHeight
       }
