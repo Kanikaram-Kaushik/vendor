@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { parseReferenceImages } from '@/lib/reference-image'
 import { formatQuotationDeadline } from '@/lib/quote-window'
 import { ReferenceImageGallery } from '@/components/ReferenceImageGallery'
 
