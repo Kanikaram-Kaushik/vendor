@@ -12,6 +12,10 @@ interface QuotationItem {
   pricePerSft: number | null
   notes?: string
   image?: string | null
+  itemType?: string | null
+  hardware?: string | null
+  coreMaterial?: string | null
+  externalFinish?: string | null
 }
 
 interface Quotation {
@@ -231,12 +235,44 @@ function QuotationDetail({ id }: { id: string }) {
       y += 8
       doc.setFont('helvetica', 'normal')
 
-      // Items loop with side-by-side unit image thumbnail & item notes rendering
+      const ITEM_DESCRIPTIONS: Record<string, string> = {
+        'Tv Cabinet': 'Storage or media unit for TV and entertainment equipment with cable management.',
+        'Crockery Unit': 'Glass or solid door display cabinet for dining area tableware and glassware.',
+        'Puja Unit': 'Sacred shrine unit designed for daily prayers, brass items, and idols.',
+        'Partition': 'Divider screen or open shelving unit to create visual zones in living/dining areas.',
+        'Wardrobe': 'Bedroom clothing storage unit with hanging rods, drawers, and shelves.',
+        'Tv Unit': 'Wall-mounted or standing bedroom/living room TV backdrop panel and console.',
+        'Study Unit': 'Work desk with overhead shelving or drawer storage for laptops and books.',
+        'Bed': 'Custom bed frame structure with optional headboard and under-bed storage.',
+        'Bedside Table': 'Compact nightstand for beside-the-bed lighting, books, and daily essentials.',
+        'Dressing Unit': 'Mirror frame unit with dedicated vanity drawers and cosmetics storage.',
+        'Base Unit (Kitchen)': 'Under-counter kitchen storage cabinets housing sinks, drawers, and pullouts.',
+        'Wall Unit (Kitchen)': 'Over-counter wall-mounted kitchen cabinets for spices, dishes, and groceries.',
+        'Loft': 'Top-tier overhead storage cabinets above wardrobes or kitchen wall units.',
+        'Tall units (Kitchen)': 'Full-height kitchen pantry cabinet for appliances (oven, microwave) and groceries.',
+        'Shoerack': 'Entryway footwear storage console with ventilation and seating options.'
+      }
+
+      // Items loop with unit image thumbnail rendered directly inside item table row (left of text)
       for (let index = 0; index < quotation.items.length; index++) {
         const item = quotation.items[index]
         const hasUnitImage = !!item.image
-        const hasNotes = !!item.notes
-        const rowHeight = hasUnitImage || hasNotes ? 26 : 12
+
+        // Find standard item type description if available
+        let itemPurpose = ''
+        if (item.itemType && ITEM_DESCRIPTIONS[item.itemType]) {
+          itemPurpose = ITEM_DESCRIPTIONS[item.itemType]
+        } else {
+          for (const [typeName, descStr] of Object.entries(ITEM_DESCRIPTIONS)) {
+            if (item.description.toLowerCase().includes(typeName.toLowerCase())) {
+              itemPurpose = descStr
+              break
+            }
+          }
+        }
+
+        const subDetail = item.notes ? item.notes : itemPurpose
+        const rowHeight = hasUnitImage ? 28 : (subDetail ? 16 : 10)
 
         if (y + rowHeight > 270) {
           doc.addPage()
@@ -252,38 +288,41 @@ function QuotationDetail({ id }: { id: string }) {
         if (hasUnitImage && item.image) {
           try {
             const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 3, 22, 18)
-            descX = 43
+            doc.addImage(unitImg, 'JPEG', 18, y + 3, 24, 20)
+            descX = 45
           } catch (e) {
-            console.warn('Could not embed unit image in PDF:', e)
+            console.warn('Could not embed unit image in PDF table row:', e)
           }
         }
 
-        const maxDescLen = hasUnitImage ? 38 : 55
-        const desc = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
-        
+        const maxDescLen = hasUnitImage ? 36 : 55
+        const titleText = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
+
+        const titleY = subDetail ? y + 7 : y + (hasUnitImage ? 14 : 6)
+
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(8.5)
-        const titleY = hasNotes ? y + 8 : y + (hasUnitImage ? 13 : 7)
-        doc.text(desc, descX, titleY)
+        doc.text(titleText, descX, titleY)
 
-        if (hasNotes && item.notes) {
+        if (subDetail) {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(7.5)
           doc.setTextColor(110, 110, 110)
-          const notesText = item.notes.length > 50 ? item.notes.substring(0, 47) + '...' : item.notes
-          doc.text(`Note: ${notesText}`, descX, titleY + 6)
+          const maxSubLen = hasUnitImage ? 42 : 65
+          const subText = subDetail.length > maxSubLen ? subDetail.substring(0, maxSubLen - 3) + '...' : subDetail
+          doc.text(subText, descX, titleY + 5)
           doc.setTextColor(17, 17, 17)
         }
 
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(8.5)
-        doc.text(String(item.sft), 115, titleY)
-        doc.text(String(item.quantity), 140, titleY)
-        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, titleY)
+        const numberY = subDetail && !hasUnitImage ? y + 9 : (hasUnitImage ? y + 14 : y + 6)
+        doc.text(String(item.sft), 115, numberY)
+        doc.text(String(item.quantity), 140, numberY)
+        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, numberY)
 
         const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
-        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, titleY)
+        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, numberY)
 
         y += rowHeight
       }
