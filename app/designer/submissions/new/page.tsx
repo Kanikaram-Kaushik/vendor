@@ -137,6 +137,8 @@ export default function NewSubmissionPage() {
 
     const description = `${finalItemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
     const sftVal = Math.round(Number(width) * Number(length) * 100) / 100
+    const capturedNotes = itemNotes.trim() || ITEM_DESCRIPTIONS[finalItemType] || ''
+
     setItems([
       ...items,
       {
@@ -147,7 +149,7 @@ export default function NewSubmissionPage() {
         externalFinish,
         hardware,
         sft: sftVal,
-        notes: itemNotes,
+        notes: capturedNotes,
         image: itemImage || undefined,
         imageName: itemImageName || undefined,
       },
