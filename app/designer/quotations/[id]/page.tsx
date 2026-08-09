@@ -377,17 +377,17 @@ function QuotationDetail({ id }: { id: string }) {
             {quotation.items.map((item, idx) => {
               const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
               return (
-                <div key={item.id || idx} style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
-                      Size: {item.sft} SFT | Qty: {item.quantity} {item.notes && `| Note: ${item.notes}`}
-                    </div>
+                <div key={item.id || idx} style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
                     {item.image && (
-                      <div style={{ marginTop: 8 }}>
-                        <img src={item.image} alt={`${item.description} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
-                      </div>
+                      <img src={item.image} alt={`${item.description} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
                     )}
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                        Size: {item.sft} SFT | Qty: {item.quantity} {item.notes && `| Note: ${item.notes}`}
+                      </div>
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 120 }}>
                     {item.pricePerSft !== null ? (

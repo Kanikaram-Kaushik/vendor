@@ -313,19 +313,18 @@ function QuoteDetail({ id }: { id: string }) {
                 const isLookupOpen = lookupItemId === item.id
                 return (
                   <div key={item.id || idx} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 4 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 6, fontSize: 13, gap: 12 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                          {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
-                        </div>
-                        {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
                         {item.image && (
-                          <div style={{ marginTop: 10 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>Unit Image:</div>
-                            <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 140, height: 105, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
-                          </div>
+                          <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
                         )}
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                            {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
+                          </div>
+                          {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {isEditable && (

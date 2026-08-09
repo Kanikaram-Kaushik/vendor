@@ -414,15 +414,24 @@ export default function NewSubmissionPage() {
           {items.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {items.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '10px 14px', borderRadius: 6, fontSize: 13 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600 }}>{item.description}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
-                      Size: {item.sft} SFT | Qty: {item.quantity} {item.notes && `| Note: ${item.notes}`}
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16, border: '1px solid var(--border-light)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+                    {item.image ? (
+                      <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 80, height: 60, borderRadius: 6, border: '1px dashed var(--border)', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 10, flexShrink: 0 }}>
+                        No Image
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-primary)' }}>{item.description}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>
+                        Size: <strong style={{ color: 'var(--text-primary)' }}>{item.sft} SFT</strong> | Qty: <strong style={{ color: 'var(--text-primary)' }}>{item.quantity}</strong>
+                        {item.notes && <span style={{ marginLeft: 8, fontStyle: 'italic', color: 'var(--text-muted)' }}>| Note: {item.notes}</span>}
+                      </div>
                     </div>
-                    {item.image && <img src={item.image} alt={`${item.itemType || 'Submission'} reference`} style={{ width: 96, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
                   </div>
-                  <button type="button" style={{ color: '#dc2626', fontWeight: 600, padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => removeItem(idx)}>Remove</button>
+                  <button type="button" style={{ color: '#dc2626', fontWeight: 600, padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12.5 }} onClick={() => removeItem(idx)}>Remove</button>
                 </div>
               ))}
             </div>

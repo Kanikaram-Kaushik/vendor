@@ -184,14 +184,18 @@ function SubmissionDetail({ id }: { id: string }) {
           {submission.items && submission.items.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {submission.items.map((item, idx) => (
-                <div key={item.id || idx} style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 6, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13.5 }}>{item.description}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
-                      Size: <strong style={{ color: 'var(--text-primary)' }}>{item.sft || 0} SFT</strong> | Qty: <strong style={{ color: 'var(--text-primary)' }}>{item.quantity}</strong>
-                      {item.notes && <span style={{ marginLeft: 10, fontStyle: 'italic', color: 'var(--text-muted)' }}>Note: {item.notes}</span>}
+                <div key={item.id || idx} style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+                    {item.image && (
+                      <img src={item.image} alt={`${item.description} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13.5 }}>{item.description}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                        Size: <strong style={{ color: 'var(--text-primary)' }}>{item.sft || 0} SFT</strong> | Qty: <strong style={{ color: 'var(--text-primary)' }}>{item.quantity}</strong>
+                        {item.notes && <span style={{ marginLeft: 10, fontStyle: 'italic', color: 'var(--text-muted)' }}>| Note: {item.notes}</span>}
+                      </div>
                     </div>
-                    {item.image && <img src={item.image} alt={`${item.description} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
                   </div>
                 </div>
               ))}
