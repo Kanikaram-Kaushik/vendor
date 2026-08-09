@@ -145,7 +145,13 @@ export default function NewSubmissionPage() {
     setError('')
 
     const isNonWood = !!NON_WOOD_ITEMS[finalItemType]
-    const description = isNonWood ? finalItemType : `${finalItemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
+    let description = finalItemType
+    if (!isNonWood) {
+      const specs = [coreMaterial, externalFinish, hardware ? `${hardware} hardware` : null].filter(Boolean)
+      if (specs.length > 0) {
+        description = `${finalItemType} (${specs.join(', ')})`
+      }
+    }
     const sftVal = Math.round(Number(width) * Number(length) * 100) / 100
     const capturedNotes = itemNotes.trim() || ITEM_DESCRIPTIONS[finalItemType] || ''
 
@@ -155,9 +161,9 @@ export default function NewSubmissionPage() {
         description,
         quantity: qty,
         itemType: finalItemType,
-        coreMaterial: isNonWood ? null : coreMaterial,
-        externalFinish: isNonWood ? null : externalFinish,
-        hardware: isNonWood ? null : hardware,
+        coreMaterial: coreMaterial || null,
+        externalFinish: externalFinish || null,
+        hardware: hardware || null,
         sft: sftVal,
         notes: capturedNotes,
         image: itemImage || undefined,
@@ -365,7 +371,7 @@ export default function NewSubmissionPage() {
             Add Project Item Spec
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: NON_WOOD_ITEMS[itemType] ? '1fr' : '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: (itemType === 'OTHER_CUSTOM' || !NON_WOOD_ITEMS[itemType]) ? '1fr 1fr 1fr 1fr' : '1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Option Type</label>
               <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={itemType} onChange={e => setItemType(e.target.value)}>
@@ -381,7 +387,7 @@ export default function NewSubmissionPage() {
                 <input
                   className="form-input"
                   style={{ fontSize: 12, padding: '6px 10px', marginTop: 6, borderRadius: 6 }}
-                  placeholder="Type item name e.g. Gypsum Ceiling..."
+                  placeholder="Type custom item name (e.g. Acoustic Paneling)..."
                   value={customItemType}
                   onChange={e => setCustomItemType(e.target.value)}
                   autoFocus
@@ -389,7 +395,22 @@ export default function NewSubmissionPage() {
               )}
             </div>
 
-            {!NON_WOOD_ITEMS[itemType] && (
+            {itemType === 'OTHER_CUSTOM' ? (
+              <>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Core Material (Optional)</label>
+                  <input className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} placeholder="e.g. Gypsum Board / MDF" value={coreMaterial} onChange={e => setCoreMaterial(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>External Finish (Optional)</label>
+                  <input className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} placeholder="e.g. Emulsion Paint / Veneer" value={externalFinish} onChange={e => setExternalFinish(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Hardware (Optional)</label>
+                  <input className="form-input" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 6 }} placeholder="e.g. Standard / Channels" value={hardware} onChange={e => setHardware(e.target.value)} />
+                </div>
+              </>
+            ) : !NON_WOOD_ITEMS[itemType] && (
               <>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Core Material</label>
