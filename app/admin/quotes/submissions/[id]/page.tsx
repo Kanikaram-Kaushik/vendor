@@ -246,7 +246,8 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       for (let index = 0; index < submission.items.length; index++) {
         const item = submission.items[index]
         const hasUnitImage = !!item.image
-        const rowHeight = hasUnitImage ? 24 : 10
+        const hasNotes = !!item.notes
+        const rowHeight = hasUnitImage || hasNotes ? 26 : 12
 
         if (y + rowHeight > 270) {
           doc.addPage()
@@ -262,22 +263,75 @@ function ReviewDistributeDetail({ id }: { id: string }) {
         if (hasUnitImage && item.image) {
           try {
             const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
+            doc.addImage(unitImg, 'JPEG', 18, y + 3, 22, 18)
             descX = 43
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }
         }
 
-        const maxDescLen = hasUnitImage ? 45 : 60
+        const maxDescLen = hasUnitImage ? 42 : 58
         const desc = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
-        const textY = hasUnitImage ? y + 12 : y + 6
-        doc.text(desc, descX, textY)
-        doc.text(String(item.sft || '-'), 125, textY)
-        doc.text(String(item.quantity), 165, textY)
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8.5)
+        const titleY = hasNotes ? y + 8 : y + (hasUnitImage ? 13 : 7)
+        doc.text(desc, descX, titleY)
+
+        if (hasNotes && item.notes) {
+          doc.setFont('helvetica', 'normal')
+          doc.setFontSize(7.5)
+          doc.setTextColor(110, 110, 110)
+          const notesText = item.notes.length > 55 ? item.notes.substring(0, 52) + '...' : item.notes
+          doc.text(`Note: ${notesText}`, descX, titleY + 6)
+          doc.setTextColor(17, 17, 17)
+        }
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8.5)
+        doc.text(String(item.sft || '-'), 125, titleY)
+        doc.text(String(item.quantity), 165, titleY)
 
         y += rowHeight
       }
+
+      // Divider Line
+      doc.setDrawColor(220, 220, 220)
+      doc.line(15, y + 2, 195, y + 2)
+      y += 10
+
+      // Terms and Conditions Block
+      if (y + 45 > 270) {
+        doc.addPage()
+        y = 20
+      }
+
+      doc.setDrawColor(230, 230, 230)
+      doc.setFillColor(252, 252, 252)
+      doc.roundedRect(15, y, 180, 40, 3, 3, 'FD')
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.setTextColor(50, 50, 50)
+      doc.text('TERMS & CONDITIONS', 20, y + 8)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7.5)
+      doc.setTextColor(100, 100, 100)
+      
+      const terms = [
+        '1. Specification Finality: Item specifications and dimensions provided in this document are subject to final site audit.',
+        '2. Distribution: Submissions distributed to verified brand partners will receive itemized pricing matrix quotes.',
+        '3. Revisions: Design adjustments or specification changes must be submitted prior to brand quote acceptance.',
+        '4. Execution Timeline: Expected completion schedules will be furnished upon final approval of brand quotations.',
+        '5. Support: For queries regarding this submission, contact DesignBHK partner support.',
+      ]
+
+      let termY = y + 15
+      terms.forEach((term) => {
+        doc.text(term, 20, termY)
+        termY += 5.2
+      })
 
       doc.save(`Submission-${submission.projectName.replace(/\s+/g, '_')}.pdf`)
     } catch (err) {

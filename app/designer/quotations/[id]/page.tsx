@@ -231,11 +231,12 @@ function QuotationDetail({ id }: { id: string }) {
       y += 8
       doc.setFont('helvetica', 'normal')
 
-      // Items loop with side-by-side unit image thumbnail rendering
+      // Items loop with side-by-side unit image thumbnail & item notes rendering
       for (let index = 0; index < quotation.items.length; index++) {
         const item = quotation.items[index]
         const hasUnitImage = !!item.image
-        const rowHeight = hasUnitImage ? 24 : 10
+        const hasNotes = !!item.notes
+        const rowHeight = hasUnitImage || hasNotes ? 26 : 12
 
         if (y + rowHeight > 270) {
           doc.addPage()
@@ -251,34 +252,50 @@ function QuotationDetail({ id }: { id: string }) {
         if (hasUnitImage && item.image) {
           try {
             const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
+            doc.addImage(unitImg, 'JPEG', 18, y + 3, 22, 18)
             descX = 43
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }
         }
 
-        const maxDescLen = hasUnitImage ? 40 : 55
+        const maxDescLen = hasUnitImage ? 38 : 55
         const desc = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
-        const textY = hasUnitImage ? y + 12 : y + 6
-        doc.text(desc, descX, textY)
-        doc.text(String(item.sft), 115, textY)
-        doc.text(String(item.quantity), 140, textY)
-        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, textY)
+        
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8.5)
+        const titleY = hasNotes ? y + 8 : y + (hasUnitImage ? 13 : 7)
+        doc.text(desc, descX, titleY)
+
+        if (hasNotes && item.notes) {
+          doc.setFont('helvetica', 'normal')
+          doc.setFontSize(7.5)
+          doc.setTextColor(110, 110, 110)
+          const notesText = item.notes.length > 50 ? item.notes.substring(0, 47) + '...' : item.notes
+          doc.text(`Note: ${notesText}`, descX, titleY + 6)
+          doc.setTextColor(17, 17, 17)
+        }
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8.5)
+        doc.text(String(item.sft), 115, titleY)
+        doc.text(String(item.quantity), 140, titleY)
+        doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, titleY)
 
         const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
-        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, textY)
+        doc.text(lineTotal !== null ? `INR ${lineTotal.toLocaleString('en-IN')}` : '-', 180, titleY)
 
         y += rowHeight
       }
 
       // Divider Line
+      doc.setDrawColor(220, 220, 220)
       doc.line(15, y + 2, 195, y + 2)
       y += 8
 
       // Estimated Brand Total
       if (quotation.totalPrice !== null) {
-        if (y + 10 > 270) {
+        if (y + 12 > 270) {
           doc.addPage()
           y = 20
         }
@@ -286,7 +303,43 @@ function QuotationDetail({ id }: { id: string }) {
         doc.setFontSize(11)
         doc.text('Estimated Brand Total:', 110, y)
         doc.text(`INR ${quotation.totalPrice.toLocaleString('en-IN')}`, 160, y)
+        y += 14
+      } else {
+        y += 6
       }
+
+      // Terms and Conditions Block
+      if (y + 45 > 270) {
+        doc.addPage()
+        y = 20
+      }
+
+      doc.setDrawColor(230, 230, 230)
+      doc.setFillColor(252, 252, 252)
+      doc.roundedRect(15, y, 180, 40, 3, 3, 'FD')
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.setTextColor(50, 50, 50)
+      doc.text('TERMS & CONDITIONS', 20, y + 8)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7.5)
+      doc.setTextColor(100, 100, 100)
+      
+      const terms = [
+        '1. Validity: This quotation is valid for 30 days from the date of issuance.',
+        '2. Payment Schedule: 50% advance upon approval, 40% prior to dispatch, 10% post installation.',
+        '3. Taxes & Freight: Prices are inclusive of applicable GST unless specified otherwise. Transportation extra as actuals.',
+        '4. Variations: Any changes in site dimensions, materials, or scope will be re-quoted accordingly.',
+        '5. Warranty: Standard 5-year manufacturer warranty applies on hardware and core materials as per brand guidelines.',
+      ]
+
+      let termY = y + 15
+      terms.forEach((term) => {
+        doc.text(term, 20, termY)
+        termY += 5.2
+      })
 
       // Save Document
       doc.save(`Quotation-${quotation.projectName.replace(/\s+/g, '_')}.pdf`)
