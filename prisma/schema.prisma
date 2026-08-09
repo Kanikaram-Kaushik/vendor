@@ -28,6 +28,7 @@ model Brand {
   status       BrandStatus @default(ACTIVE)
   quotes       Quote[]
   matrixCells  PricingMatrixCell[]
+  nonWoodMatrixCells NonWoodPricingCell[]
   hiringPosts  HiringPost[]
 
   // Profile details
@@ -168,4 +169,18 @@ model HiringPost {
   updatedAt   DateTime @updatedAt
 
   @@map("hiring_posts")
+}
+
+model NonWoodPricingCell {
+  id        String   @id @default(cuid())
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId   String
+  itemType  String   // e.g., "False Ceiling", "Electrical Work"
+  unit      String   // e.g., "sft", "nos"
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([brandId, itemType, unit])
+  @@map("non_wood_pricing_cells")
 }

@@ -17,16 +17,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const cells = await prisma.pricingMatrixCell.findMany({
-      where: { brandId: vendor.id }
-    })
+    const [cells, nonWoodCells] = await Promise.all([
+      prisma.pricingMatrixCell.findMany({ where: { brandId: vendor.id } }),
+      prisma.nonWoodPricingCell.findMany({ where: { brandId: vendor.id } })
+    ])
 
-    if (cells.length === 0) {
+    if (cells.length === 0 && nonWoodCells.length === 0) {
       // Return fallback defaults
-      return NextResponse.json({ cells: DEFAULT_MATRIX, isDefault: true })
+      return NextResponse.json({ cells: DEFAULT_MATRIX, nonWoodCells: [], isDefault: true })
     }
 
-    return NextResponse.json({ cells, isDefault: false })
+    return NextResponse.json({ cells, nonWoodCells, isDefault: false })
   } catch (error) {
     console.error('Pricing matrix GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -41,11 +42,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { cells } = await request.json()
-
-    if (!cells || !Array.isArray(cells)) {
-      return NextResponse.json({ error: 'Invalid cells list' }, { status: 400 })
-    }
+    const { cells, nonWoodCells } = await request.json()
 
     // Process bulk upsert inside transaction
     interface MatrixCellInput {
@@ -56,24 +53,51 @@ export async function PATCH(request: NextRequest) {
       price: number | string
     }
 
-    await prisma.$transaction(async (tx) => {
-      // 1. Delete all existing pricing matrix cells for this brand
-      await tx.pricingMatrixCell.deleteMany({
-        where: { brandId: vendor.id }
-      })
+    interface NonWoodCellInput {
+      itemType: string
+      unit: string
+      price: number | string
+    }
 
-      // 2. Insert new ones
-      if (cells.length > 0) {
-        await tx.pricingMatrixCell.createMany({
-          data: (cells as MatrixCellInput[]).map((cell) => ({
-            brandId: vendor.id,
-            code: Number(cell.code),
-            hardware: cell.hardware,
-            coreMaterial: cell.coreMaterial,
-            externalFinish: cell.externalFinish,
-            price: parseFloat(String(cell.price)) || 0
-          }))
+    await prisma.$transaction(async (tx) => {
+      if (cells && Array.isArray(cells)) {
+        // 1. Delete all existing pricing matrix cells for this brand
+        await tx.pricingMatrixCell.deleteMany({
+          where: { brandId: vendor.id }
         })
+
+        // 2. Insert new ones
+        if (cells.length > 0) {
+          await tx.pricingMatrixCell.createMany({
+            data: (cells as MatrixCellInput[]).map((cell) => ({
+              brandId: vendor.id,
+              code: Number(cell.code),
+              hardware: cell.hardware,
+              coreMaterial: cell.coreMaterial,
+              externalFinish: cell.externalFinish,
+              price: parseFloat(String(cell.price)) || 0
+            }))
+          })
+        }
+      }
+
+      if (nonWoodCells && Array.isArray(nonWoodCells)) {
+        // 1. Delete all existing non-wood cells
+        await tx.nonWoodPricingCell.deleteMany({
+          where: { brandId: vendor.id }
+        })
+
+        // 2. Insert new ones
+        if (nonWoodCells.length > 0) {
+          await tx.nonWoodPricingCell.createMany({
+            data: (nonWoodCells as NonWoodCellInput[]).map((cell) => ({
+              brandId: vendor.id,
+              itemType: cell.itemType,
+              unit: cell.unit,
+              price: parseFloat(String(cell.price)) || 0
+            }))
+          })
+        }
       }
     })
 

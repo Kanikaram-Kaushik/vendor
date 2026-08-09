@@ -134,6 +134,11 @@ function ReviewDistributeDetail({ id }: { id: string }) {
         if (!url) return null
         if (url.startsWith('data:image/')) return url
 
+        let fetchUrl = url
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          fetchUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`
+        }
+
         return new Promise((resolve) => {
           const img = new Image()
           img.crossOrigin = 'Anonymous'
@@ -157,10 +162,10 @@ function ReviewDistributeDetail({ id }: { id: string }) {
             }
           }
           img.onerror = (e) => {
-            console.warn('Failed to load image for PDF:', url, e)
+            console.warn('Failed to load image for PDF:', fetchUrl, e)
             resolve(null)
           }
-          img.src = url
+          img.src = fetchUrl
         })
       }
 
@@ -685,6 +690,38 @@ function ReviewDistributeDetail({ id }: { id: string }) {
                             {matchesBudget ? 'Within Budget' : 'Over Budget'}
                           </span>
                         )}
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          style={{ background: '#000', color: '#fff', fontSize: 11, padding: '4px 10px', marginLeft: 8 }}
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            if (!confirm(`Are you sure you want to directly approve ${b.brandName}'s calculated quote? This will create an approved quote document immediately.`)) return
+                            
+                            setActionLoading(true)
+                            try {
+                              const res = await fetch(`/api/admin/submissions/${id}/approve-brand`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ brandId: b.brandId }),
+                              })
+                              if (res.ok) {
+                                const data = await res.json()
+                                router.push(`/designer/quotations/${data.quoteId}`)
+                              } else {
+                                const err = await res.json()
+                                alert(err.error || 'Failed to approve brand')
+                              }
+                            } catch (e) {
+                              alert('Network error')
+                            } finally {
+                              setActionLoading(false)
+                            }
+                          }}
+                          disabled={actionLoading}
+                        >
+                          {actionLoading ? '...' : 'Approve & View Doc'}
+                        </button>
                       </>
                     ) : (
                       <span 

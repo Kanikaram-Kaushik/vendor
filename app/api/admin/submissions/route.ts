@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
     // Fetch all active brands & pricing cells to calculate estimates
     const brands = await prisma.brand.findMany({
       where: { status: 'ACTIVE' },
-      include: { matrixCells: true },
+      include: { 
+        matrixCells: true,
+        nonWoodMatrixCells: true 
+      },
     })
 
     // For each submission, compute estimations for each brand
@@ -44,27 +47,34 @@ export async function GET(request: NextRequest) {
         let isComplete = true
 
         sub.items.forEach((item) => {
-          if (!item.itemType || !item.hardware || !item.coreMaterial || !item.externalFinish || !item.sft) {
+          if (!item.itemType) {
             isComplete = false
             return
           }
+
+          let price: number | null = null
 
           const matchedType = ITEM_TYPES.find(it => it.name === item.itemType)
-          if (!matchedType) {
-            isComplete = false
-            return
+          if (matchedType && item.hardware && item.coreMaterial && item.externalFinish && item.sft) {
+            price = findMatrixPrice(
+              brand.matrixCells,
+              matchedType.code,
+              item.hardware,
+              item.coreMaterial,
+              item.externalFinish
+            )
+          } else {
+            // Check non-wood items
+            const unit = item.sft ? 'sft' : 'nos'
+            const cell = brand.nonWoodMatrixCells.find(c => c.itemType === item.itemType && c.unit === unit)
+            if (cell) {
+              price = cell.price
+            }
           }
 
-          const price = findMatrixPrice(
-            brand.matrixCells,
-            matchedType.code,
-            item.hardware,
-            item.coreMaterial,
-            item.externalFinish
-          )
-
           if (price != null) {
-            totalCost += (item.sft || 0) * item.quantity * price
+            const area = item.sft ? item.sft : item.quantity
+            totalCost += area * price
           } else {
             isComplete = false
           }

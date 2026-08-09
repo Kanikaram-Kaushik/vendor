@@ -66,6 +66,18 @@ const ITEM_TYPES = [
   { name: 'Custom Carpentry', code: 1, group: 'Custom Works' }
 ]
 
+const NON_WOOD_ITEMS = [
+  { name: 'False Ceiling', units: ['sft'] },
+  { name: 'Electrical Work', units: ['nos'] },
+  { name: 'Plumbing Work', units: ['nos'] },
+  { name: 'Painting & Polish', units: ['sft'] },
+  { name: 'Flooring & Tiling', units: ['sft'] },
+  { name: 'Lighting & Fixtures', units: ['nos'] },
+  { name: 'Wall Paneling', units: ['sft'] },
+  { name: 'CNC Partition', units: ['sft'] },
+  { name: 'Custom Carpentry', units: ['sft', 'nos'] }
+]
+
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -110,14 +122,29 @@ interface MatrixCell {
   price: number
 }
 
+interface NonWoodMatrixCell {
+  itemType: string
+  unit: string
+  price: number
+}
+
+interface NonWoodEdit {
+  itemType: string
+  unit: string
+  area: string
+  pricePerUnit: string
+}
+
 function QuoteDetail({ id }: { id: string }) {
   const router = useRouter()
   const [quote, setQuote] = useState<Quote | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [prices, setPrices] = useState<Record<string, string>>({})
+  const [nonWoodEdits, setNonWoodEdits] = useState<Record<string, NonWoodEdit>>({})
   const [error, setError] = useState('')
   const [matrixCells, setMatrixCells] = useState<MatrixCell[]>([])
+  const [nonWoodMatrixCells, setNonWoodMatrixCells] = useState<NonWoodMatrixCell[]>([])
   const [now, setNow] = useState(0)
 
   // Lookup state per item
@@ -135,6 +162,7 @@ function QuoteDetail({ id }: { id: string }) {
         if (res.ok) {
           const data = await res.json()
           setMatrixCells(data.cells || [])
+          setNonWoodMatrixCells(data.nonWoodCells || [])
         }
       } catch (err) {
         console.error('Error fetching matrix cells for lookup:', err)
@@ -152,10 +180,26 @@ function QuoteDetail({ id }: { id: string }) {
         if (found) {
           setQuote(found)
           const initial: Record<string, string> = {}
+          const initialNw: Record<string, NonWoodEdit> = {}
           found.items?.forEach((item: QuoteItem) => {
             initial[item.id] = item.pricePerSft !== null && item.pricePerSft !== undefined ? String(item.pricePerSft) : ''
+            
+            // Populate non-wood edits if this is a non-wood item or likely one
+            const isNonWood = item.itemType ? 
+                !ITEM_TYPES.some(it => it.name === item.itemType) : 
+                false
+            
+            if (isNonWood || (item.itemType && ['False Ceiling', 'Electrical Work', 'Plumbing Work'].some(t => item.itemType?.includes(t)))) {
+               initialNw[item.id] = {
+                 itemType: item.itemType || 'False Ceiling',
+                 unit: item.sft ? 'sft' : 'nos',
+                 area: item.sft ? String(item.sft) : String(item.quantity),
+                 pricePerUnit: item.pricePerSft !== null && item.pricePerSft !== undefined ? String(item.pricePerSft) : ''
+               }
+            }
           })
           setPrices(initial)
+          setNonWoodEdits(initialNw)
         }
       }
     } catch (err) {
@@ -193,10 +237,23 @@ function QuoteDetail({ id }: { id: string }) {
     setActionLoading(true)
     setError('')
     try {
-      const itemsPayload = Object.entries(prices).map(([id, val]) => ({
-        id,
-        pricePerSft: val.trim() === '' ? null : parseFloat(val),
-      }))
+      const itemsPayload = Object.entries(prices).map(([itemId, val]) => {
+        // If it's a non-wood item, we send the edited area, qty, itemType
+        const nw = nonWoodEdits[itemId]
+        if (nw) {
+          return {
+            id: itemId,
+            pricePerSft: nw.pricePerUnit.trim() === '' ? null : parseFloat(nw.pricePerUnit),
+            itemType: nw.itemType,
+            sft: nw.unit === 'sft' ? nw.area : null,
+            quantity: nw.unit === 'nos' ? nw.area : '1'
+          }
+        }
+        return {
+          id: itemId,
+          pricePerSft: val.trim() === '' ? null : parseFloat(val),
+        }
+      })
 
       const res = await fetch(`/api/vendor/quotes/${quote.id}`, {
         method: 'PATCH',
@@ -322,6 +379,67 @@ function QuoteDetail({ id }: { id: string }) {
               {(() => {
                 const refImages = parseReferenceImages(quote.referenceImage)
                 return quote.items.map((item, idx) => {
+                  if (nonWoodEdits[item.id]) {
+                    const nw = nonWoodEdits[item.id]
+                    const handleNwChange = (field: keyof NonWoodEdit, val: string) => {
+                      setNonWoodEdits(prev => ({ ...prev, [item.id]: { ...nw, [field]: val } }))
+                    }
+                    
+                    const computedTotal = (parseFloat(nw.area) || 0) * (parseFloat(nw.pricePerUnit) || 0)
+                    return (
+                      <div key={item.id || idx} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 4 }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16 }}>
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Item Type</label>
+                             <select disabled={!isEditable} className="form-select" style={{ fontSize: 13, padding: '6px 10px', borderRadius: 4 }} value={nw.itemType} onChange={e => handleNwChange('itemType', e.target.value)}>
+                               {NON_WOOD_ITEMS.map(it => <option key={it.name} value={it.name}>{it.name}</option>)}
+                             </select>
+                          </div>
+                          <div style={{ flex: '0 1 100px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Unit</label>
+                             <select disabled={!isEditable} className="form-select" style={{ fontSize: 13, padding: '6px 10px', borderRadius: 4 }} value={nw.unit} onChange={e => handleNwChange('unit', e.target.value)}>
+                               <option value="sft">SFT</option>
+                               <option value="nos">Nos</option>
+                             </select>
+                          </div>
+                          <div style={{ flex: '0 1 120px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Area / Qty</label>
+                             <input disabled={!isEditable} type="number" min="0" step="any" className="form-input" style={{ fontSize: 13, padding: '6px 10px', borderRadius: 4 }} value={nw.area} onChange={e => handleNwChange('area', e.target.value)} />
+                          </div>
+                          <div style={{ flex: '0 1 120px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Price / Unit (₹)</label>
+                             <input disabled={!isEditable} type="number" min="0" step="any" className="form-input" style={{ fontSize: 13, padding: '6px 10px', borderRadius: 4 }} value={nw.pricePerUnit} onChange={e => handleNwChange('pricePerUnit', e.target.value)} />
+                          </div>
+                          <div style={{ flex: '0 1 120px', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Total Price (₹)</label>
+                             <div style={{ fontSize: 14, fontWeight: 700, padding: '6px 0', color: computedTotal > 0 ? '#16a34a' : 'inherit' }}>₹{computedTotal.toFixed(2)}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Lookup Matrix functionality for non-wood */}
+                        {isEditable && (
+                          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              style={{ fontSize: 11.5, padding: '4px 12px', borderRadius: 4, background: '#fff' }}
+                              onClick={() => {
+                                const cell = nonWoodMatrixCells.find(c => c.itemType === nw.itemType && c.unit === nw.unit)
+                                if (cell) {
+                                  handleNwChange('pricePerUnit', String(cell.price))
+                                } else {
+                                  alert('No standard rate found in your Pricing Matrix for this Item & Unit.')
+                                }
+                              }}
+                            >
+                              📐 Lookup Matrix Rate
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+
                   const isLookupOpen = lookupItemId === item.id
                   const displayImg = item.image || (refImages[idx] || refImages[0] || null)
                   return (

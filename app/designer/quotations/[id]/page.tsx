@@ -132,6 +132,11 @@ function QuotationDetail({ id }: { id: string }) {
         if (!url) return null
         if (url.startsWith('data:image/')) return url
 
+        let fetchUrl = url
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          fetchUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`
+        }
+
         return new Promise((resolve) => {
           const img = new Image()
           img.crossOrigin = 'Anonymous'
@@ -155,10 +160,10 @@ function QuotationDetail({ id }: { id: string }) {
             }
           }
           img.onerror = (e) => {
-            console.warn('Failed to load image for PDF:', url, e)
+            console.warn('Failed to load image for PDF:', fetchUrl, e)
             resolve(null)
           }
-          img.src = url
+          img.src = fetchUrl
         })
       }
 

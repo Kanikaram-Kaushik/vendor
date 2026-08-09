@@ -46,16 +46,35 @@ export async function PATCH(
       for (const item of items) {
         if (!item.id) continue
         
-        let priceValue: number | null = null
-        if (item.pricePerSft !== undefined && item.pricePerSft !== null && item.pricePerSft !== '') {
-          priceValue = parseFloat(item.pricePerSft)
-          if (isNaN(priceValue)) priceValue = null
+        const updateData: any = {}
+
+        if (item.pricePerSft !== undefined) {
+          let priceValue: number | null = null
+          if (item.pricePerSft !== null && item.pricePerSft !== '') {
+            priceValue = parseFloat(item.pricePerSft)
+            if (isNaN(priceValue)) priceValue = null
+          }
+          updateData.pricePerSft = priceValue
         }
 
-        await prisma.submissionItem.update({
-          where: { id: item.id, quoteId: id },
-          data: { pricePerSft: priceValue },
-        })
+        if (item.sft !== undefined) {
+          updateData.sft = parseFloat(item.sft) || null
+        }
+        
+        if (item.quantity !== undefined) {
+          updateData.quantity = parseInt(item.quantity, 10) || 1
+        }
+        
+        if (item.itemType !== undefined) {
+          updateData.itemType = item.itemType
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await prisma.submissionItem.update({
+            where: { id: item.id, quoteId: id },
+            data: updateData,
+          })
+        }
       }
     }
 
