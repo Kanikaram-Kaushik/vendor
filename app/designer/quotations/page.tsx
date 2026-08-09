@@ -168,7 +168,7 @@ export default function DesignerQuotationsPage() {
                                 style={{ padding: '6px 10px', fontSize: 12, background: '#16a34a', borderColor: '#16a34a' }}
                                 onClick={async () => {
                                   await fetch(`/api/designer/quotations/${q.id}/select`, { method: 'POST' })
-                                  fetchQuotations()
+                                  fetchData()
                                 }}
                               >
                                 Approve
@@ -184,7 +184,7 @@ export default function DesignerQuotationsPage() {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'REJECTED' }),
                                   })
-                                  fetchQuotations()
+                                  fetchData()
                                 }}
                               >
                                 Reject
