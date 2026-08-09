@@ -336,12 +336,12 @@ export default function PricingMatrixPage() {
           </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            <div className="card" style={{ overflow: 'hidden' }}>
+            <div className="card">
               <div style={{ backgroundColor: '#f8fafc', color: '#0f172a', padding: '14px 20px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
                 <span>Non-Wood Works Pricing</span>
                 <span style={{ fontSize: 11.5, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Standard Rates</span>
               </div>
-              <div style={{ padding: 20, overflowX: 'auto' }}>
+              <div className="table-wrap" style={{ padding: '12px 16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
                 {loading ? (
                   <div className="empty-state-text">Loading pricing tables...</div>
                 ) : (
