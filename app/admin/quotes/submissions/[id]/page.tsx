@@ -129,12 +129,27 @@ function ReviewDistributeDetail({ id }: { id: string }) {
       const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
 
-      // Helper function to load image to HTMLImageElement
-      const loadImage = (url: string): Promise<HTMLImageElement> => {
+      // Helper function to load image to Data URL for clean jsPDF rendering
+      const loadImageDataUrl = (url: string): Promise<string> => {
         return new Promise((resolve, reject) => {
           const img = new Image()
           img.crossOrigin = 'Anonymous'
-          img.onload = () => resolve(img)
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas')
+              canvas.width = img.naturalWidth || img.width || 300
+              canvas.height = img.naturalHeight || img.height || 200
+              const ctx = canvas.getContext('2d')
+              if (ctx) {
+                ctx.drawImage(img, 0, 0)
+                resolve(canvas.toDataURL('image/jpeg', 0.85))
+              } else {
+                resolve(url)
+              }
+            } catch {
+              resolve(url)
+            }
+          }
           img.onerror = (e) => reject(e)
           img.src = url
         })
@@ -158,8 +173,8 @@ function ReviewDistributeDetail({ id }: { id: string }) {
 
       // Try embedding Logo on the left
       try {
-        const logoImg = await loadImage('/icon.png')
-        doc.addImage(logoImg, 'PNG', 15, 15, 45, 45)
+        const logoImgData = await loadImageDataUrl('/icon.png')
+        doc.addImage(logoImgData, 'PNG', 15, 15, 45, 45)
       } catch (e) {
         doc.setDrawColor(200, 200, 200)
         doc.rect(15, 15, 45, 45)
@@ -311,8 +326,8 @@ function ReviewDistributeDetail({ id }: { id: string }) {
 
         if (itemImgSrc) {
           try {
-            const unitImg = await loadImage(itemImgSrc)
-            doc.addImage(unitImg, 'JPEG', colX[2] + 2, rowStartY + 3, 34, 22)
+            const unitImgData = await loadImageDataUrl(itemImgSrc)
+            doc.addImage(unitImgData, 'JPEG', colX[2] + 2, rowStartY + 3, 34, 22)
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }

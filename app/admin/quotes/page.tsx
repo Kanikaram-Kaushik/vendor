@@ -41,6 +41,8 @@ interface BrandQuote {
   brandEmail: string
   projectName: string
   status: 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'ACTIVE'
+  totalCost?: number | null
+  isFullyPriced?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -311,6 +313,7 @@ export default function QuotesPage() {
                     <thead>
                       <tr>
                         <th>Brand</th>
+                        <th>Total Cost</th>
                         <th>Status</th>
                         <th>Created Date</th>
                         <th style={{ textAlign: 'right' }}>Actions</th>
@@ -320,13 +323,29 @@ export default function QuotesPage() {
                       {groupQuotes.map((quote) => (
                         <tr key={quote.id}>
                           <td>
-                            <div style={{ fontWeight: 500 }}>{quote.brandName}</div>
+                            <div style={{ fontWeight: 600 }}>{quote.brandName}</div>
                             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{quote.brandEmail}</div>
+                          </td>
+                          <td>
+                            {quote.totalCost != null ? (
+                              <div style={{ fontWeight: 700, color: '#16a34a', fontSize: 13.5 }}>
+                                ₹{quote.totalCost.toLocaleString('en-IN')}
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pricing Pending</span>
+                            )}
                           </td>
                           <td><StatusBadge status={quote.status} /></td>
                           <td style={{ color: 'var(--text-muted)' }}>{formatDate(quote.createdAt)}</td>
                           <td style={{ textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: '5px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
+                                onClick={() => router.push(`/designer/quotations/${quote.id}`)}
+                              >
+                                📄 View Doc
+                              </button>
                               <select
                                 className="form-select"
                                 style={{ width: 'auto', padding: '4px 8px', fontSize: 12 }}

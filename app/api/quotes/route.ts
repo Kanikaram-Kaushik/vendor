@@ -24,20 +24,36 @@ export async function GET(request: NextRequest) {
         ...(status && QUOTE_STATUSES.has(status) ? { status: status as QuoteStatus } : {}),
       },
       orderBy: { createdAt: 'desc' },
-      include: { brand: { select: { name: true, email: true } } },
+      include: {
+        brand: { select: { name: true, email: true } },
+        items: true,
+      },
     })
 
     return NextResponse.json({
-      quotes: quotes.map((q) => ({
-        id: q.id,
-        brandId: q.brandId,
-        brandName: q.brand?.name || 'Pending Distribution',
-        brandEmail: q.brand?.email || '',
-        projectName: q.projectName,
-        status: q.status,
-        createdAt: q.createdAt,
-        updatedAt: q.updatedAt,
-      })),
+      quotes: quotes.map((q) => {
+        const totalCost = q.items.reduce((sum, item) => {
+          if (item.pricePerSft && item.sft) {
+            return sum + (item.sft * item.quantity * item.pricePerSft)
+          }
+          return sum
+        }, 0)
+
+        const isFullyPriced = q.items.length > 0 && q.items.every((item) => item.pricePerSft !== null)
+
+        return {
+          id: q.id,
+          brandId: q.brandId,
+          brandName: q.brand?.name || 'Pending Distribution',
+          brandEmail: q.brand?.email || '',
+          projectName: q.projectName,
+          status: q.status,
+          totalCost: totalCost > 0 ? totalCost : null,
+          isFullyPriced,
+          createdAt: q.createdAt,
+          updatedAt: q.updatedAt,
+        }
+      }),
     })
   } catch (error) {
     console.error('Quotes GET error:', error)
