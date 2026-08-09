@@ -955,12 +955,6 @@ input, select, textarea { font-family: inherit; }
     grid-template-columns: 1fr !important;
   }
 
-  div[style*="display: flex"][style*="justify-content: space-between"] {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 12px;
-  }
-
   .form-actions {
     flex-direction: column;
     width: 100%;
