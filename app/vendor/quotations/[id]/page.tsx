@@ -322,136 +322,133 @@ function QuoteDetail({ id }: { id: string }) {
                 const refImages = parseReferenceImages(quote.referenceImage)
                 return quote.items.map((item, idx) => {
                   const isLookupOpen = lookupItemId === item.id
+                  const displayImg = item.image || (refImages[idx] || refImages[0] || null)
                   return (
                     <div key={item.id || idx} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 4 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-                          {(() => {
-                            const displayImg = item.image || (refImages[idx] || refImages[0] || null)
-                            return displayImg ? (
-                              <img src={displayImg} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
-                            ) : null
-                          })()}
+                          {displayImg && (
+                            <img src={displayImg} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                          )}
                           <div>
-                          <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                            {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
+                            <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                              {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
+                            </div>
+                            {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
                           </div>
-                          {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
                         </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {isEditable && (
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            style={{ fontSize: 11.5, padding: '6px 12px', color: 'var(--text-secondary)', background: '#fff', border: '1px solid var(--border)', borderRadius: 4 }}
-                            onClick={() => {
-                              if (isLookupOpen) {
-                                setLookupItemId(null)
-                              } else {
-                                setLookupItemId(item.id)
-                                // Match item specs if present
-                                if (item.itemType) setSelectedItemType(item.itemType)
-                                if (item.coreMaterial) setSelectedCore(item.coreMaterial)
-                                if (item.externalFinish) setSelectedFinish(item.externalFinish)
-                                if (item.hardware) setSelectedHardware(item.hardware)
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {isEditable && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              style={{ fontSize: 11.5, padding: '6px 12px', color: 'var(--text-secondary)', background: '#fff', border: '1px solid var(--border)', borderRadius: 4 }}
+                              onClick={() => {
+                                if (isLookupOpen) {
+                                  setLookupItemId(null)
+                                } else {
+                                  setLookupItemId(item.id)
+                                  if (item.itemType) setSelectedItemType(item.itemType)
+                                  if (item.coreMaterial) setSelectedCore(item.coreMaterial)
+                                  if (item.externalFinish) setSelectedFinish(item.externalFinish)
+                                  if (item.hardware) setSelectedHardware(item.hardware)
 
-                                if (!item.itemType) {
-                                  // Fallback matching by parsing the description
-                                  const descLower = item.description.toLowerCase()
-                                  const found = ITEM_TYPES.find(it => descLower.includes(it.name.toLowerCase()) || it.name.toLowerCase().includes(descLower))
-                                  if (found) {
-                                    setSelectedItemType(found.name)
-                                  } else {
-                                    setSelectedItemType('Tv Cabinet')
+                                  if (!item.itemType) {
+                                    const descLower = item.description.toLowerCase()
+                                    const found = ITEM_TYPES.find(it => descLower.includes(it.name.toLowerCase()) || it.name.toLowerCase().includes(descLower))
+                                    if (found) {
+                                      setSelectedItemType(found.name)
+                                    } else {
+                                      setSelectedItemType('Tv Cabinet')
+                                    }
                                   }
                                 }
-                              }
-                            }}
-                          >
-                            {isLookupOpen ? 'Cancel' : '📐 Lookup Matrix'}
-                          </button>
-                        )}
-                        <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>₹</span>
-                        <input
-                          type="number"
-                          step="any"
-                          min="0"
-                          className="form-input"
-                          style={{ width: 110, padding: '6px 10px', fontSize: 13, textAlign: 'right', borderRadius: 4 }}
-                          placeholder="Price / SFT"
-                          disabled={!isEditable}
-                          value={prices[item.id] || ''}
-                          onChange={(e) => setPrices({ ...prices, [item.id]: e.target.value })}
-                        />
+                              }}
+                            >
+                              {isLookupOpen ? 'Cancel' : '📐 Lookup Matrix'}
+                            </button>
+                          )}
+                          <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>₹</span>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            className="form-input"
+                            style={{ width: 110, padding: '6px 10px', fontSize: 13, textAlign: 'right', borderRadius: 4 }}
+                            placeholder="Price / SFT"
+                            disabled={!isEditable}
+                            value={prices[item.id] || ''}
+                            onChange={(e) => setPrices({ ...prices, [item.id]: e.target.value })}
+                          />
+                        </div>
                       </div>
+
+                      {/* Expandable pricing matrix calculator */}
+                      {isLookupOpen && (
+                        <div style={{ backgroundColor: '#fff', border: '1px solid var(--border)', borderRadius: 6, padding: 14, marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', borderBottom: '1px solid #f3f4f6', paddingBottom: 6 }}>
+                            Price Matrix Calculator
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                            <div>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Option Type</label>
+                              <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedItemType} onChange={e => setSelectedItemType(e.target.value)}>
+                                {ITEM_TYPES.map(it => <option key={it.name} value={it.name}>{it.name} (Code {it.code})</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Core Material</label>
+                              <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedCore} onChange={e => setSelectedCore(e.target.value)}>
+                                {CORES.map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>External Finish</label>
+                              <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedFinish} onChange={e => setSelectedFinish(e.target.value)}>
+                                {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Hardware</label>
+                              <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedHardware} onChange={e => setSelectedHardware(e.target.value)}>
+                                {HARDWARES.map(h => <option key={h} value={h}>{h}</option>)}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
+                            <div>
+                              {(() => {
+                                const p = getMatrixPrice(selectedItemType, selectedCore, selectedFinish, selectedHardware)
+                                if (p !== null) {
+                                  return <span style={{ color: 'green', fontWeight: 600, fontSize: 13 }}>Matrix Price: ₹{p} / SFT</span>
+                                }
+                                return <span style={{ color: 'red', fontWeight: 600, fontSize: 13 }}>Price not set in matrix</span>
+                              })()}
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              style={{ background: '#000', color: '#fff', fontSize: 12, padding: '6px 12px', borderRadius: 4 }}
+                              disabled={getMatrixPrice(selectedItemType, selectedCore, selectedFinish, selectedHardware) === null}
+                              onClick={() => {
+                                const p = getMatrixPrice(selectedItemType, selectedCore, selectedFinish, selectedHardware)
+                                if (p !== null) {
+                                  setPrices({ ...prices, [item.id]: String(p) })
+                                  setLookupItemId(null)
+                                }
+                              }}
+                            >
+                              Apply Calculated Rate
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Expandable pricing matrix calculator */}
-                    {isLookupOpen && (
-                      <div style={{ backgroundColor: '#fff', border: '1px solid var(--border)', borderRadius: 6, padding: 14, marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', borderBottom: '1px solid #f3f4f6', paddingBottom: 6 }}>
-                          Price Matrix Calculator
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                          <div>
-                            <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Option Type</label>
-                            <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedItemType} onChange={e => setSelectedItemType(e.target.value)}>
-                              {ITEM_TYPES.map(it => <option key={it.name} value={it.name}>{it.name} (Code {it.code})</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Core Material</label>
-                            <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedCore} onChange={e => setSelectedCore(e.target.value)}>
-                              {CORES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>External Finish</label>
-                            <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedFinish} onChange={e => setSelectedFinish(e.target.value)}>
-                              {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Hardware</label>
-                            <select className="form-select" style={{ fontSize: 12, padding: '6px 10px', width: '100%', borderRadius: 4 }} value={selectedHardware} onChange={e => setSelectedHardware(e.target.value)}>
-                              {HARDWARES.map(h => <option key={h} value={h}>{h}</option>)}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
-                          <div>
-                            {(() => {
-                              const p = getMatrixPrice(selectedItemType, selectedCore, selectedFinish, selectedHardware)
-                              if (p !== null) {
-                                return <span style={{ color: 'green', fontWeight: 600, fontSize: 13 }}>Matrix Price: ₹{p} / SFT</span>
-                              }
-                              return <span style={{ color: 'red', fontWeight: 600, fontSize: 13 }}>Price not set in matrix</span>
-                            })()}
-                          </div>
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            style={{ background: '#000', color: '#fff', fontSize: 12, padding: '6px 12px', borderRadius: 4 }}
-                            disabled={getMatrixPrice(selectedItemType, selectedCore, selectedFinish, selectedHardware) === null}
-                            onClick={() => {
-                              const p = getMatrixPrice(selectedItemType, selectedCore, selectedFinish, selectedHardware)
-                              if (p !== null) {
-                                setPrices({ ...prices, [item.id]: String(p) })
-                                setLookupItemId(null)
-                              }
-                            }}
-                          >
-                            Apply Calculated Rate
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })()})
+                  )
+                })
+              })()}
             </div>
           ) : (
             <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No items in this quote.</div>
