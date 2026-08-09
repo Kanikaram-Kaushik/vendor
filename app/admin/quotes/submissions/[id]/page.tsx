@@ -409,14 +409,19 @@ function ReviewDistributeDetail({ id }: { id: string }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase' }}>
             Project Specifications ({submission.itemsCount} Items)
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {submission.items.map((item, idx) => (
-              <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #eef2f6', paddingBottom: 10, gap: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.description}</div>
-                  {item.image && <img src={item.image} alt={`${item.itemType || 'Submission'} reference`} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', marginTop: 8 }} />}
+              <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+                  {item.image && (
+                    <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                  )}
+                  <div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.description}</div>
+                    {item.notes && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+                  </div>
                 </div>
-                <span style={{ color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{item.sft} SFT × Qty {item.quantity}</span>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{item.sft} SFT × Qty {item.quantity}</span>
               </div>
             ))}
           </div>
