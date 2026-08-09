@@ -154,13 +154,43 @@ export default function DesignerQuotationsPage() {
                         </td>
                         <td style={{ color: 'var(--text-muted)' }}>{formatDate(q.createdAt)}</td>
                         <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: '6px 12px', fontSize: 12 }}
-                            onClick={() => router.push(`/designer/quotations/${q.id}`)}
-                          >
-                            View & Action
-                          </button>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: '6px 10px', fontSize: 12 }}
+                              onClick={() => router.push(`/designer/quotations/${q.id}`)}
+                            >
+                              View Details
+                            </button>
+                            {q.status !== 'APPROVED' && (
+                              <button
+                                className="btn btn-primary"
+                                style={{ padding: '6px 10px', fontSize: 12, background: '#16a34a', borderColor: '#16a34a' }}
+                                onClick={async () => {
+                                  await fetch(`/api/designer/quotations/${q.id}/select`, { method: 'POST' })
+                                  fetchQuotations()
+                                }}
+                              >
+                                Approve
+                              </button>
+                            )}
+                            {q.status !== 'REJECTED' && (
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: '6px 10px', fontSize: 12, color: '#dc2626', borderColor: '#fca5a5' }}
+                                onClick={async () => {
+                                  await fetch(`/api/quotes/${q.id}`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'REJECTED' }),
+                                  })
+                                  fetchQuotations()
+                                }}
+                              >
+                                Reject
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )

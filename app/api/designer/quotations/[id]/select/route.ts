@@ -41,22 +41,13 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // 1. Update target child quote to APPROVED
+    // 1. Update target child quote to APPROVED (individual approval, allowing multiple approved quotes per project)
     await prisma.quote.update({
       where: { id: childQuote.id },
       data: { status: 'APPROVED' },
     })
 
-    // 2. Reject sibling child quotes
-    await prisma.quote.updateMany({
-      where: {
-        parentQuoteId: parentQuote.id,
-        id: { not: childQuote.id },
-      },
-      data: { status: 'REJECTED' },
-    })
-
-    // 3. Update parent quote: set brandId, status to ACTIVE (representing finalised contract/active project)
+    // 2. Update parent quote: set brandId, status to ACTIVE (representing active project with approved quotes)
     await prisma.quote.update({
       where: { id: parentQuote.id },
       data: {

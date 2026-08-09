@@ -98,6 +98,29 @@ function QuotationDetail({ id }: { id: string }) {
     }
   }
 
+  async function handleReject() {
+    if (!quotation) return
+    setActionLoading(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/quotes/${quotation.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED' })
+      })
+      if (res.ok) {
+        router.push('/designer/quotations')
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Failed to reject quotation')
+        setActionLoading(false)
+      }
+    } catch {
+      setError('Network error')
+      setActionLoading(false)
+    }
+  }
+
   const handleDownloadPDF = async () => {
     if (!quotation) return
     try {
@@ -490,17 +513,28 @@ function QuotationDetail({ id }: { id: string }) {
 
         <div className="form-actions" style={{ borderTop: '1px solid var(--border)', paddingTop: 18, justifyContent: 'flex-end', gap: 10 }}>
           <button type="button" className="btn btn-secondary" onClick={() => router.push('/designer/quotations')} disabled={actionLoading}>
-            Cancel
+            Back to List
           </button>
-          {quotation.status === 'SUBMITTED' && quotation.isFullyPriced && (
+          {quotation.status !== 'REJECTED' && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+              disabled={actionLoading}
+              onClick={handleReject}
+            >
+              {actionLoading ? 'Updating…' : '✗ Reject Quote'}
+            </button>
+          )}
+          {quotation.status !== 'APPROVED' && quotation.isFullyPriced && (
             <button
               type="button"
               className="btn btn-primary"
-              style={{ background: '#000', color: '#fff' }}
+              style={{ background: '#16a34a', color: '#fff', borderColor: '#16a34a' }}
               disabled={actionLoading}
               onClick={handleApprove}
             >
-              {actionLoading ? 'Approving…' : '✓ Choose & Approve Brand'}
+              {actionLoading ? 'Approving…' : '✓ Approve Quote'}
             </button>
           )}
         </div>
