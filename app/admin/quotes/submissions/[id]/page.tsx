@@ -61,6 +61,9 @@ function ReviewDistributeDetail({ id }: { id: string }) {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([])
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [editNoteValue, setEditNoteValue] = useState('')
+  const [savingItemId, setSavingItemId] = useState<string | null>(null)
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -515,23 +518,88 @@ function ReviewDistributeDetail({ id }: { id: string }) {
         {/* Item Specifications */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 16, marginBottom: 20, backgroundColor: '#fafafa' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase' }}>
-            Project Specifications ({submission.itemsCount} Items)
+            Project Specifications ({submission.itemsCount} Items) — Admin Editable Descriptions
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {submission.items.map((item, idx) => (
-              <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-                  {item.image && (
-                    <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
-                  )}
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.description}</div>
-                    {item.notes && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+            {submission.items.map((item, idx) => {
+              const isEditing = editingItemId === item.id
+              return (
+                <div key={item.id || idx} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+                      {item.image && (
+                        <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 14 }}>{item.description}</div>
+                        {item.notes && <div style={{ fontSize: 12, color: '#16a34a', marginTop: 4, fontWeight: 500 }}>Description / Spec: {item.notes}</div>}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: 500, whiteSpace: 'nowrap', fontSize: 12 }}>
+                        {item.sft ? `${item.sft} SFT × ` : ''}Qty {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ fontSize: 11.5, padding: '4px 10px', borderRadius: 4 }}
+                        onClick={() => {
+                          if (isEditing) {
+                            setEditingItemId(null)
+                          } else {
+                            setEditingItemId(item.id)
+                            setEditNoteValue(item.notes || '')
+                          }
+                        }}
+                      >
+                        {isEditing ? 'Cancel' : '✏ Edit Description'}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Inline Description Editor for Admin */}
+                  {isEditing && (
+                    <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 10, marginTop: 4, display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        className="form-input"
+                        style={{ flex: 1, fontSize: 12.5, padding: '6px 10px', borderRadius: 4 }}
+                        placeholder="Enter sub item description (e.g. Providing & fixing full height unit in HDHMR)..."
+                        value={editNoteValue}
+                        onChange={(e) => setEditNoteValue(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ background: '#000', color: '#fff', fontSize: 12, padding: '6px 14px', borderRadius: 4 }}
+                        disabled={savingItemId === item.id}
+                        onClick={async () => {
+                          setSavingItemId(item.id)
+                          try {
+                            const res = await fetch(`/api/admin/items/${item.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ notes: editNoteValue }),
+                            })
+                            if (res.ok) {
+                              await fetchDetail()
+                              setEditingItemId(null)
+                            } else {
+                              alert('Failed to update description')
+                            }
+                          } catch (e) {
+                            console.error(e)
+                          } finally {
+                            setSavingItemId(null)
+                          }
+                        }}
+                      >
+                        {savingItemId === item.id ? 'Saving…' : 'Save Spec Description'}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{item.sft} SFT × Qty {item.quantity}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
