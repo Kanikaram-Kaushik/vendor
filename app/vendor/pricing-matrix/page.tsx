@@ -281,16 +281,15 @@ export default function PricingMatrixPage() {
               const color = colorMap[hw] || { bg: '#f3f4f6', text: '#374151' }
 
               return (
-                <div key={hw} className="card" style={{ overflow: 'hidden' }}>
+                <div key={hw} className="card" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   {/* Table Header */}
                   <div style={{ backgroundColor: color.bg, color: color.text, padding: '14px 20px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{hw} Hardware Pricing (Code {activeCode})</span>
                     <span style={{ fontSize: 11.5, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Price per SFT (₹)</span>
                   </div>
 
-                  {/* Pricing Matrix Form Grid */}
-                  <div style={{ padding: 20, overflowX: 'auto' }}>
-                    <table className="data-table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 600 }}>
+                  <div style={{ padding: 20, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table className="data-table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 750 }}>
                       <thead>
                         <tr style={{ background: '#f9fafb' }}>
                           <th style={{ padding: '12px 16px', borderBottom: '2px solid #eee', textAlign: 'left', color: 'var(--text-secondary)' }}>Core Material / External Finish</th>
