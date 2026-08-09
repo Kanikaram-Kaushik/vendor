@@ -12,7 +12,7 @@ export default function TypewriterWord({ word, className = "" }: TypewriterWordP
     const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
-        let timeout: NodeJS.Timeout;
+        let timeout: ReturnType<typeof setTimeout>;
 
         if (!isDeleting && displayedText === word) {
             // Pause for 1.5 seconds when the word is fully typed

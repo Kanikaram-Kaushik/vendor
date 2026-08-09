@@ -289,8 +289,8 @@ export default function PricingMatrixPage() {
                   </div>
 
                   {/* Pricing Matrix Form Grid */}
-                  <div style={{ padding: 20 }}>
-                    <table className="data-table" style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <div style={{ padding: 20, overflowX: 'auto' }}>
+                    <table className="data-table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 600 }}>
                       <thead>
                         <tr style={{ background: '#f9fafb' }}>
                           <th style={{ padding: '12px 16px', borderBottom: '2px solid #eee', textAlign: 'left', color: 'var(--text-secondary)' }}>Core Material / External Finish</th>
@@ -342,11 +342,11 @@ export default function PricingMatrixPage() {
                 <span>Non-Wood Works Pricing</span>
                 <span style={{ fontSize: 11.5, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Standard Rates</span>
               </div>
-              <div style={{ padding: 20 }}>
+              <div style={{ padding: 20, overflowX: 'auto' }}>
                 {loading ? (
                   <div className="empty-state-text">Loading pricing tables...</div>
                 ) : (
-                  <table className="data-table" style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <table className="data-table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 500 }}>
                     <thead>
                       <tr style={{ background: '#f9fafb' }}>
                         <th style={{ padding: '12px 16px', borderBottom: '2px solid #eee', textAlign: 'left', color: 'var(--text-secondary)' }}>Item Type</th>
