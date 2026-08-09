@@ -318,19 +318,21 @@ function QuoteDetail({ id }: { id: string }) {
 
           {quote.items && quote.items.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {quote.items.map((item, idx) => {
-                const isLookupOpen = lookupItemId === item.id
-                return (
-                  <div key={item.id || idx} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 4 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-                        {(() => {
-                          const displayImg = item.image || (refImages[idx] || refImages[0] || null)
-                          return displayImg ? (
-                            <img src={displayImg} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
-                          ) : null
-                        })()}
-                        <div>
+              {(() => {
+                const refImages = parseReferenceImages(quote.referenceImage)
+                return quote.items.map((item, idx) => {
+                  const isLookupOpen = lookupItemId === item.id
+                  return (
+                    <div key={item.id || idx} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+                          {(() => {
+                            const displayImg = item.image || (refImages[idx] || refImages[0] || null)
+                            return displayImg ? (
+                              <img src={displayImg} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                            ) : null
+                          })()}
+                          <div>
                           <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
                           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                             {item.sft && `Size: ${item.sft} SFT | `}Qty: {item.quantity}
@@ -449,7 +451,7 @@ function QuoteDetail({ id }: { id: string }) {
                     )}
                   </div>
                 )
-              })}
+              })()})
             </div>
           ) : (
             <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No items in this quote.</div>
