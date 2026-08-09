@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
         parentQuote: {
           designerId: designer.id,
         },
+        status: {
+          in: ['SUBMITTED', 'APPROVED', 'REJECTED']
+        }
       },
       orderBy: { createdAt: 'desc' },
       include: {

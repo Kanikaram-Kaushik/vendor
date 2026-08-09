@@ -52,7 +52,7 @@ export async function POST(
           designerId: submission.designerId,
           projectName: submission.projectName,
           parentQuoteId: submission.id,
-          status: 'SUBMITTED', // Set status to SUBMITTED so the brand sees it
+          status: 'ACTIVE', // Set status to ACTIVE so the brand sees it as pending their action
           quotationWindowHours: submission.quotationWindowHours,
           quotationExpiresAt,
           referenceImage: submission.referenceImage,
