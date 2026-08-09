@@ -21,8 +21,20 @@ interface SubmissionItem {
 
 const HARDWARES = ['EBCO', 'HETTICH', 'HAFELE']
 const CORES = ['MR Ply', 'BWP Ply', 'HDHMR']
-const FINISHES = ['Laminate', 'Acrylic', 'PU']
-const ITEM_DESCRIPTIONS: Record<string, string> = {
+const NON_WOOD_ITEMS: Record<string, string> = {
+  'False Ceiling': 'Sft - Gypsum board, POP, or grid false ceiling with cove lighting layout.',
+  'Electrical': 'No - Point wiring, DB setup, switchboard installation, and ambient fixture wiring.',
+  'Flooring': 'Sft - Wooden laminate or vinyl floor laying and underlayment.',
+  'Painting': 'Sft - Emulsion wall paint, POP punning, wallpaper, or wood veneer polish.',
+  'Plumbing': 'No - Water inlet/outlet lines, sanitaryware fitting, CP fittings, and drainage setup.',
+  'Tiles Flooring': 'Sft - Vitrified tiling, ceramic tiles, or stone floor laying.',
+  'Wall Panelling': 'Sft - Veneer, fluted panel, charcoal louver, or upholstered feature wall paneling.',
+  'Wallpaper': 'Sft - Decorative wall cover rolls and application.',
+  'Wall Beeding': 'Sft - Wooden or POP molding beeding strips for wall framing.',
+  'Profile Glass': 'Sft - Aluminum profile glass shutters or decorative partition glass.'
+}
+
+const WOODWORK_ITEMS: Record<string, string> = {
   'Tv Cabinet': 'Storage or media unit for TV and entertainment equipment with cable management.',
   'Crockery Unit': 'Glass or solid door display cabinet for dining area tableware and glassware.',
   'Puja Unit': 'Sacred shrine unit designed for daily prayers, brass items, and idols.',
@@ -37,16 +49,12 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
   'Wall Unit (Kitchen)': 'Over-counter wall-mounted kitchen cabinets for spices, dishes, and groceries.',
   'Loft': 'Top-tier overhead storage cabinets above wardrobes or kitchen wall units.',
   'Tall units (Kitchen)': 'Full-height kitchen pantry cabinet for appliances (oven, microwave) and groceries.',
-  'Shoerack': 'Entryway footwear storage console with ventilation and seating options.',
-  'False Ceiling': 'Gypsum board, POP, or wooden grid false ceiling with cove lighting layout.',
-  'Electrical Work': 'Point wiring, DB setup, switchboard installation, and ambient fixture wiring.',
-  'Plumbing Work': 'Water inlet/outlet lines, sanitaryware fitting, CP fittings, and drainage setup.',
-  'Painting & Polish': 'Emulsion wall paint, POP punning, wallpaper, or wood veneer polish.',
-  'Flooring & Tiling': 'Vitrified tiling, wooden laminate flooring, epoxy, or stone laying.',
-  'Lighting & Fixtures': 'Profile lights, magnetic tracks, spotlights, chandeliers, and LED strips.',
-  'Wall Paneling': 'Veneer, fluted panel, charcoal louver, or upholstered feature wall paneling.',
-  'CNC Partition': 'Laser-cut MDF, WPC, or metallic decorative screen partition.',
-  'Custom Carpentry': 'Bespoke wooden furniture, window seats, or custom storage solutions.'
+  'Shoerack': 'Entryway footwear storage console with ventilation and seating options.'
+}
+
+const ITEM_DESCRIPTIONS: Record<string, string> = {
+  ...WOODWORK_ITEMS,
+  ...NON_WOOD_ITEMS
 }
 
 const ITEM_TYPES = Object.keys(ITEM_DESCRIPTIONS)
@@ -135,7 +143,8 @@ export default function NewSubmissionPage() {
     }
     setError('')
 
-    const description = `${finalItemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
+    const isNonWood = !!NON_WOOD_ITEMS[finalItemType]
+    const description = isNonWood ? finalItemType : `${finalItemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
     const sftVal = Math.round(Number(width) * Number(length) * 100) / 100
     const capturedNotes = itemNotes.trim() || ITEM_DESCRIPTIONS[finalItemType] || ''
 
@@ -145,9 +154,9 @@ export default function NewSubmissionPage() {
         description,
         quantity: qty,
         itemType: finalItemType,
-        coreMaterial,
-        externalFinish,
-        hardware,
+        coreMaterial: isNonWood ? null : coreMaterial,
+        externalFinish: isNonWood ? null : externalFinish,
+        hardware: isNonWood ? null : hardware,
         sft: sftVal,
         notes: capturedNotes,
         image: itemImage || undefined,
@@ -355,11 +364,16 @@ export default function NewSubmissionPage() {
             Add Project Item Spec
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: NON_WOOD_ITEMS[itemType] ? '1fr' : '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Option Type</label>
               <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={itemType} onChange={e => setItemType(e.target.value)}>
-                {ITEM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <optgroup label="Non-Wood Work (Non-Wood Specifications)">
+                  {Object.keys(NON_WOOD_ITEMS).map(t => <option key={t} value={t}>{t}</option>)}
+                </optgroup>
+                <optgroup label="Woodwork Specifications">
+                  {Object.keys(WOODWORK_ITEMS).map(t => <option key={t} value={t}>{t}</option>)}
+                </optgroup>
                 <option value="OTHER_CUSTOM">+ Custom Item Type...</option>
               </select>
               {itemType === 'OTHER_CUSTOM' && (
@@ -373,24 +387,29 @@ export default function NewSubmissionPage() {
                 />
               )}
             </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Core Material</label>
-              <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={coreMaterial} onChange={e => setCoreMaterial(e.target.value)}>
-                {CORES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>External Finish</label>
-              <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={externalFinish} onChange={e => setExternalFinish(e.target.value)}>
-                {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Hardware</label>
-              <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={hardware} onChange={e => setHardware(e.target.value)}>
-                {HARDWARES.map(h => <option key={h} value={h}>{h}</option>)}
-              </select>
-            </div>
+
+            {!NON_WOOD_ITEMS[itemType] && (
+              <>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Core Material</label>
+                  <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={coreMaterial} onChange={e => setCoreMaterial(e.target.value)}>
+                    {CORES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>External Finish</label>
+                  <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={externalFinish} onChange={e => setExternalFinish(e.target.value)}>
+                    {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Hardware</label>
+                  <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={hardware} onChange={e => setHardware(e.target.value)}>
+                    {HARDWARES.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Selected Option Type Description Hint */}
