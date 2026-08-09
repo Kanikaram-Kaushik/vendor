@@ -179,36 +179,7 @@ function QuotationDetail({ id }: { id: string }) {
         })
       }
 
-      // Check for reference images
       const refImages = parseReferenceImages(quotation.referenceImage)
-
-      if (refImages.length > 0) {
-        doc.setFontSize(12)
-        doc.setFont('helvetica', 'bold')
-        doc.text(`Reference Images (${refImages.length})`, 15, y)
-        y += 6
-
-        let xOffset = 15
-        for (let i = 0; i < refImages.length; i++) {
-          try {
-            const img = await loadImage(refImages[i])
-            if (xOffset + 35 > 195) {
-              xOffset = 15
-              y += 30
-            }
-            if (y + 28 > 270) {
-              doc.addPage()
-              y = 20
-              xOffset = 15
-            }
-            doc.addImage(img, 'JPEG', xOffset, y, 32, 24)
-            xOffset += 36
-          } catch (e) {
-            console.warn('Could not embed reference image in PDF:', e)
-          }
-        }
-        y += 30
-      }
 
       // Section: Itemized Rates Header
       if (y + 20 > 270) {
@@ -258,7 +229,8 @@ function QuotationDetail({ id }: { id: string }) {
       // Items loop with unit image rendered directly in the Image column inside the table
       for (let index = 0; index < quotation.items.length; index++) {
         const item = quotation.items[index]
-        const hasUnitImage = !!item.image
+        const itemImgSrc = item.image || (refImages[index] || refImages[0] || null)
+        const hasUnitImage = !!itemImgSrc
 
         let itemPurpose = ''
         if (item.itemType && ITEM_DESCRIPTIONS[item.itemType]) {
@@ -286,9 +258,9 @@ function QuotationDetail({ id }: { id: string }) {
         }
 
         // Draw image inside the Image column
-        if (hasUnitImage && item.image) {
+        if (hasUnitImage && itemImgSrc) {
           try {
-            const unitImg = await loadImage(item.image)
+            const unitImg = await loadImage(itemImgSrc)
             doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
           } catch (e) {
             console.warn('Could not embed unit image in PDF table row:', e)
