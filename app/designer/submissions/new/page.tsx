@@ -416,12 +416,8 @@ export default function NewSubmissionPage() {
               {items.map((item, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16, border: '1px solid var(--border-light)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-                    {item.image ? (
+                    {item.image && (
                       <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
-                    ) : (
-                      <div style={{ width: 80, height: 60, borderRadius: 6, border: '1px dashed var(--border)', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 10, flexShrink: 0 }}>
-                        No Image
-                      </div>
                     )}
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-primary)' }}>{item.description}</div>
