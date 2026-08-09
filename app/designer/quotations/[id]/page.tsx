@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { parseReferenceImages } from '@/lib/reference-image'
+import { ReferenceImageGallery } from '@/components/ReferenceImageGallery'
 
 interface QuotationItem {
   id: string
@@ -220,15 +221,16 @@ function QuotationDetail({ id }: { id: string }) {
       doc.text('Itemized Specifications', 15, y)
       y += 6
 
-      // Table Header
+      // Table Header: Image | Description | Size (SFT) | Qty | Rate/SFT | Total
       doc.setFillColor(245, 245, 245)
       doc.rect(15, y, 180, 8, 'F')
 
       doc.setFontSize(9)
       doc.setFont('helvetica', 'bold')
-      doc.text('Description', 18, y + 5)
-      doc.text('Size (SFT)', 115, y + 5)
-      doc.text('Qty', 140, y + 5)
+      doc.text('Image', 18, y + 5)
+      doc.text('Description', 45, y + 5)
+      doc.text('Size (SFT)', 120, y + 5)
+      doc.text('Qty', 142, y + 5)
       doc.text('Rate/SFT', 155, y + 5)
       doc.text('Total', 180, y + 5)
 
@@ -253,12 +255,11 @@ function QuotationDetail({ id }: { id: string }) {
         'Shoerack': 'Entryway footwear storage console with ventilation and seating options.'
       }
 
-      // Items loop with unit image thumbnail rendered directly inside item table row (left of text)
+      // Items loop with unit image rendered directly in the Image column inside the table
       for (let index = 0; index < quotation.items.length; index++) {
         const item = quotation.items[index]
         const hasUnitImage = !!item.image
 
-        // Find standard item type description if available
         let itemPurpose = ''
         if (item.itemType && ITEM_DESCRIPTIONS[item.itemType]) {
           itemPurpose = ITEM_DESCRIPTIONS[item.itemType]
@@ -272,7 +273,7 @@ function QuotationDetail({ id }: { id: string }) {
         }
 
         const subDetail = item.notes ? item.notes : itemPurpose
-        const rowHeight = hasUnitImage ? 28 : (subDetail ? 16 : 10)
+        const rowHeight = hasUnitImage ? 24 : (subDetail ? 16 : 10)
 
         if (y + rowHeight > 270) {
           doc.addPage()
@@ -284,41 +285,43 @@ function QuotationDetail({ id }: { id: string }) {
           doc.rect(15, y, 180, rowHeight, 'F')
         }
 
-        let descX = 18
+        // Draw image inside the Image column
         if (hasUnitImage && item.image) {
           try {
             const unitImg = await loadImage(item.image)
-            doc.addImage(unitImg, 'JPEG', 18, y + 3, 24, 20)
-            descX = 45
+            doc.addImage(unitImg, 'JPEG', 18, y + 2, 22, 18)
           } catch (e) {
             console.warn('Could not embed unit image in PDF table row:', e)
           }
+        } else {
+          doc.setFontSize(8)
+          doc.setTextColor(150, 150, 150)
+          doc.text('-', 25, y + 6)
+          doc.setTextColor(17, 17, 17)
         }
 
-        const maxDescLen = hasUnitImage ? 36 : 55
+        const maxDescLen = 38
         const titleText = item.description.length > maxDescLen ? item.description.substring(0, maxDescLen - 3) + '...' : item.description
-
-        const titleY = subDetail ? y + 7 : y + (hasUnitImage ? 14 : 6)
+        const titleY = subDetail ? y + 6 : y + (hasUnitImage ? 12 : 6)
 
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(8.5)
-        doc.text(titleText, descX, titleY)
+        doc.text(titleText, 45, titleY)
 
         if (subDetail) {
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(7.5)
           doc.setTextColor(110, 110, 110)
-          const maxSubLen = hasUnitImage ? 42 : 65
-          const subText = subDetail.length > maxSubLen ? subDetail.substring(0, maxSubLen - 3) + '...' : subDetail
-          doc.text(subText, descX, titleY + 5)
+          const subText = subDetail.length > 42 ? subDetail.substring(0, 39) + '...' : subDetail
+          doc.text(subText, 45, titleY + 5)
           doc.setTextColor(17, 17, 17)
         }
 
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(8.5)
-        const numberY = subDetail && !hasUnitImage ? y + 9 : (hasUnitImage ? y + 14 : y + 6)
-        doc.text(String(item.sft), 115, numberY)
-        doc.text(String(item.quantity), 140, numberY)
+        const numberY = subDetail && !hasUnitImage ? y + 8 : (hasUnitImage ? y + 12 : y + 6)
+        doc.text(String(item.sft), 120, numberY)
+        doc.text(String(item.quantity), 142, numberY)
         doc.text(item.pricePerSft !== null ? `INR ${item.pricePerSft.toLocaleString('en-IN')}` : '-', 155, numberY)
 
         const lineTotal = item.pricePerSft ? item.sft * item.quantity * item.pricePerSft : null
@@ -452,6 +455,8 @@ function QuotationDetail({ id }: { id: string }) {
             </div>
           </div>
         </div>
+
+        <ReferenceImageGallery referenceImage={quotation.referenceImage} />
 
         {/* Itemized pricing table */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 18, marginBottom: 24, backgroundColor: '#fafafa' }}>
