@@ -53,7 +53,16 @@ const ITEM_TYPES = [
   { name: 'Wall Unit (Kitchen)', code: 2, group: 'Kitchen' },
   { name: 'Loft', code: 1, group: 'Kitchen' },
   { name: 'Tall units (Kitchen)', code: 2, group: 'Kitchen' },
-  { name: 'Shoerack', code: 1, group: 'Outside' }
+  { name: 'Shoerack', code: 1, group: 'Outside' },
+  { name: 'False Ceiling', code: 1, group: 'Ceiling' },
+  { name: 'Electrical Work', code: 1, group: 'MEP Services' },
+  { name: 'Plumbing Work', code: 1, group: 'MEP Services' },
+  { name: 'Painting & Polish', code: 1, group: 'Finishes' },
+  { name: 'Flooring & Tiling', code: 1, group: 'Finishes' },
+  { name: 'Lighting & Fixtures', code: 1, group: 'Lighting' },
+  { name: 'Wall Paneling', code: 1, group: 'Wall Features' },
+  { name: 'CNC Partition', code: 1, group: 'Partitions' },
+  { name: 'Custom Carpentry', code: 1, group: 'Custom Works' }
 ]
 
 function formatDate(dateStr: string) {

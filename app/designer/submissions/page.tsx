@@ -65,7 +65,16 @@ const ITEM_TYPES = [
   'Wall Unit (Kitchen)',
   'Loft',
   'Tall units (Kitchen)',
-  'Shoerack'
+  'Shoerack',
+  'False Ceiling',
+  'Electrical Work',
+  'Plumbing Work',
+  'Painting & Polish',
+  'Flooring & Tiling',
+  'Lighting & Fixtures',
+  'Wall Paneling',
+  'CNC Partition',
+  'Custom Carpentry'
 ]
 
 function formatDate(dateStr: string) {

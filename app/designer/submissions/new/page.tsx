@@ -37,7 +37,16 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
   'Wall Unit (Kitchen)': 'Over-counter wall-mounted kitchen cabinets for spices, dishes, and groceries.',
   'Loft': 'Top-tier overhead storage cabinets above wardrobes or kitchen wall units.',
   'Tall units (Kitchen)': 'Full-height kitchen pantry cabinet for appliances (oven, microwave) and groceries.',
-  'Shoerack': 'Entryway footwear storage console with ventilation and seating options.'
+  'Shoerack': 'Entryway footwear storage console with ventilation and seating options.',
+  'False Ceiling': 'Gypsum board, POP, or wooden grid false ceiling with cove lighting layout.',
+  'Electrical Work': 'Point wiring, DB setup, switchboard installation, and ambient fixture wiring.',
+  'Plumbing Work': 'Water inlet/outlet lines, sanitaryware fitting, CP fittings, and drainage setup.',
+  'Painting & Polish': 'Emulsion wall paint, POP punning, wallpaper, or wood veneer polish.',
+  'Flooring & Tiling': 'Vitrified tiling, wooden laminate flooring, epoxy, or stone laying.',
+  'Lighting & Fixtures': 'Profile lights, magnetic tracks, spotlights, chandeliers, and LED strips.',
+  'Wall Paneling': 'Veneer, fluted panel, charcoal louver, or upholstered feature wall paneling.',
+  'CNC Partition': 'Laser-cut MDF, WPC, or metallic decorative screen partition.',
+  'Custom Carpentry': 'Bespoke wooden furniture, window seats, or custom storage solutions.'
 }
 
 const ITEM_TYPES = Object.keys(ITEM_DESCRIPTIONS)
@@ -55,6 +64,7 @@ export default function NewSubmissionPage() {
 
   // Item detail fields
   const [itemType, setItemType] = useState(ITEM_TYPES[0])
+  const [customItemType, setCustomItemType] = useState('')
   const [coreMaterial, setCoreMaterial] = useState(CORES[0])
   const [externalFinish, setExternalFinish] = useState(FINISHES[0])
   const [hardware, setHardware] = useState(HARDWARES[0])
@@ -118,16 +128,21 @@ export default function NewSubmissionPage() {
       setError('Quantity must be greater than 0.')
       return
     }
+    const finalItemType = itemType === 'OTHER_CUSTOM' ? customItemType.trim() : itemType
+    if (!finalItemType) {
+      setError('Please enter a custom item type name.')
+      return
+    }
     setError('')
 
-    const description = `${itemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
+    const description = `${finalItemType} (${coreMaterial}, ${externalFinish}, ${hardware} hardware)`
     const sftVal = Math.round(Number(width) * Number(length) * 100) / 100
     setItems([
       ...items,
       {
         description,
         quantity: qty,
-        itemType,
+        itemType: finalItemType,
         coreMaterial,
         externalFinish,
         hardware,
@@ -138,6 +153,7 @@ export default function NewSubmissionPage() {
       },
     ])
     setItemNotes('')
+    setCustomItemType('')
     setQty(1)
     setWidth(5)
     setLength(2)
@@ -342,7 +358,18 @@ export default function NewSubmissionPage() {
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Option Type</label>
               <select className="form-select" style={{ fontSize: 13, padding: '8px 12px', width: '100%', borderRadius: 6 }} value={itemType} onChange={e => setItemType(e.target.value)}>
                 {ITEM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="OTHER_CUSTOM">+ Custom Item Type...</option>
               </select>
+              {itemType === 'OTHER_CUSTOM' && (
+                <input
+                  className="form-input"
+                  style={{ fontSize: 12, padding: '6px 10px', marginTop: 6, borderRadius: 6 }}
+                  placeholder="Type item name e.g. Gypsum Ceiling..."
+                  value={customItemType}
+                  onChange={e => setCustomItemType(e.target.value)}
+                  autoFocus
+                />
+              )}
             </div>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Core Material</label>
