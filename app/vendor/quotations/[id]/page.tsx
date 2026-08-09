@@ -324,9 +324,12 @@ function QuoteDetail({ id }: { id: string }) {
                   <div key={item.id || idx} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12, marginBottom: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, fontSize: 13, gap: 16 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-                        {item.image && (
-                          <img src={item.image} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
-                        )}
+                        {(() => {
+                          const displayImg = item.image || (refImages[idx] || refImages[0] || null)
+                          return displayImg ? (
+                            <img src={displayImg} alt={`${item.itemType || 'Unit'} reference`} style={{ width: 84, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }} />
+                          ) : null
+                        })()}
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 13.5 }}>{item.description}</div>
                           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
