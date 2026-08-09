@@ -128,8 +128,11 @@ function QuotationDetail({ id }: { id: string }) {
       const doc = new jsPDF()
 
       // Helper function to load image to Data URL for clean jsPDF rendering
-      const loadImageDataUrl = (url: string): Promise<string> => {
-        return new Promise((resolve, reject) => {
+      const loadImageDataUrl = async (url: string): Promise<string | null> => {
+        if (!url) return null
+        if (url.startsWith('data:image/')) return url
+
+        return new Promise((resolve) => {
           const img = new Image()
           img.crossOrigin = 'Anonymous'
           img.onload = () => {
@@ -139,16 +142,22 @@ function QuotationDetail({ id }: { id: string }) {
               canvas.height = img.naturalHeight || img.height || 200
               const ctx = canvas.getContext('2d')
               if (ctx) {
+                ctx.fillStyle = '#FFFFFF'
+                ctx.fillRect(0, 0, canvas.width, canvas.height)
                 ctx.drawImage(img, 0, 0)
                 resolve(canvas.toDataURL('image/jpeg', 0.85))
               } else {
-                resolve(url)
+                resolve(null)
               }
-            } catch {
-              resolve(url)
+            } catch (e) {
+              console.warn('Canvas conversion error in PDF:', e)
+              resolve(null)
             }
           }
-          img.onerror = (e) => reject(e)
+          img.onerror = (e) => {
+            console.warn('Failed to load image for PDF:', url, e)
+            resolve(null)
+          }
           img.src = url
         })
       }
@@ -332,7 +341,10 @@ function QuotationDetail({ id }: { id: string }) {
         if (itemImgSrc) {
           try {
             const unitImgData = await loadImageDataUrl(itemImgSrc)
-            doc.addImage(unitImgData, 'JPEG', colX[2] + 2, rowStartY + 3, 34, 22)
+            if (unitImgData) {
+              const format = unitImgData.startsWith('data:image/png') ? 'PNG' : 'JPEG'
+              doc.addImage(unitImgData, format, colX[2] + 2, rowStartY + 3, 34, 22)
+            }
           } catch (e) {
             console.warn('Could not embed unit image in PDF:', e)
           }
