@@ -22,6 +22,7 @@ interface SubmissionItem {
   externalFinish: string | null
   sft: number | null
   image: string | null
+  notes?: string | null
 }
 
 interface DesignerSubmission {
