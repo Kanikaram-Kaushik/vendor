@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "design-bhk-main"]
+  "exclude": ["node_modules", "design-bhk-main", "mobile-app"]
 }
