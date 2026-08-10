@@ -87,6 +87,22 @@ export default function VendorSidebar() {
 
       <nav className="sidebar-nav">
         {navItems.map((item) => {
+          const isExternal = item.href.startsWith('http://') || item.href.startsWith('https://')
+          if (isExternal) {
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nav-item"
+              >
+                {item.icon}
+                {item.label}
+              </a>
+            )
+          }
+
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link key={item.href} href={item.href} className={`nav-item ${isActive ? 'active' : ''}`}>
