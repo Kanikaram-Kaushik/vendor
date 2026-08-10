@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
@@ -68,66 +69,167 @@ const navItems = [
 export default function VendorSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null)
 
   async function handleLogout() {
     await fetch('/api/vendor/auth/logout', { method: 'POST' })
     router.push('/vendor/login')
   }
 
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        </div>
-        <span className="sidebar-logo-text">DesignBHK</span>
-      </div>
+  function handleExternalClick(e: React.MouseEvent, href: string) {
+    e.preventDefault()
+    setPendingUrl(href)
+  }
 
-      <nav className="sidebar-nav">
-        {navItems.map((item) => {
-          const isExternal = item.href.startsWith('http://') || item.href.startsWith('https://')
-          if (isExternal) {
+  function confirmNavigation() {
+    if (pendingUrl) {
+      window.open(pendingUrl, '_blank', 'noopener,noreferrer')
+      setPendingUrl(null)
+    }
+  }
+
+  return (
+    <>
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+          <span className="sidebar-logo-text">DesignBHK</span>
+        </div>
+
+        <nav className="sidebar-nav">
+          {navItems.map((item) => {
+            const isExternal = item.href.startsWith('http://') || item.href.startsWith('https://')
+            if (isExternal) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleExternalClick(e, item.href)}
+                  className="nav-item"
+                >
+                  {item.icon}
+                  {item.label}
+                </a>
+              )
+            }
+
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="nav-item"
-              >
+              <Link key={item.href} href={item.href} className={`nav-item ${isActive ? 'active' : ''}`}>
                 {item.icon}
                 {item.label}
-              </a>
+                {isActive && (
+                  <svg className="nav-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                )}
+              </Link>
             )
-          }
+          })}
+        </nav>
 
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          return (
-            <Link key={item.href} href={item.href} className={`nav-item ${isActive ? 'active' : ''}`}>
-              {item.icon}
-              {item.label}
-              {isActive && (
-                <svg className="nav-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
+        <div style={{ padding: '12px 10px 20px', marginTop: 'auto' }}>
+          <button className="nav-item" onClick={handleLogout} style={{ width: '100%', color: 'rgba(255,100,100,0.8)' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Logout
+          </button>
+        </div>
+      </aside>
 
-      <div style={{ padding: '12px 10px 20px', marginTop: 'auto' }}>
-        <button className="nav-item" onClick={handleLogout} style={{ width: '100%', color: 'rgba(255,100,100,0.8)' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-          Logout
-        </button>
-      </div>
-    </aside>
+      {/* Confirmation Modal */}
+      {pendingUrl && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: 16,
+            padding: 28,
+            maxWidth: 440,
+            width: '100%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            textAlign: 'center',
+            color: '#1e293b'
+          }}>
+            <div style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              backgroundColor: '#eff6ff',
+              color: '#2563eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              fontSize: 24
+            }}>
+              🛍️
+            </div>
+
+            <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: '#0f172a' }}>
+              Redirecting to Shopping Website
+            </h3>
+
+            <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 24px', lineHeight: 1.5 }}>
+              You are about to leave the portal to visit our shopping website. You will be redirected in a new tab. Are you sure you want to proceed?
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button
+                onClick={() => setPendingUrl(null)}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmNavigation}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: 'pointer'
+                }}
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
