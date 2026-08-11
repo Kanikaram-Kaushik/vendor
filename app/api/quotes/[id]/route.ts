@@ -24,7 +24,21 @@ export async function GET(
     const quote = await prisma.quote.findUnique({
       where: { id },
       include: {
-        brand: { select: { name: true, email: true, termsAndConditions: true } },
+        brand: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            description: true,
+            addressLine1: true,
+            addressLine2: true,
+            locality: true,
+            city: true,
+            state: true,
+            pincode: true,
+            termsAndConditions: true,
+          },
+        },
         items: true,
         parentQuote: { select: { projectName: true, designerBudget: true, referenceImage: true } },
       }
@@ -50,6 +64,14 @@ export async function GET(
         brandId: quote.brandId,
         brandName: quote.brand?.name || 'Unknown Brand',
         brandEmail: quote.brand?.email || '',
+        brandPhone: quote.brand?.phone || '',
+        brandDescription: quote.brand?.description || '',
+        brandAddressLine1: quote.brand?.addressLine1 || '',
+        brandAddressLine2: quote.brand?.addressLine2 || '',
+        brandLocality: quote.brand?.locality || '',
+        brandCity: quote.brand?.city || '',
+        brandState: quote.brand?.state || '',
+        brandPincode: quote.brand?.pincode || '',
         projectName: quote.parentQuote?.projectName || quote.projectName,
         designerBudget: quote.parentQuote?.designerBudget || quote.designerBudget,
         status: quote.status === 'REJECTED' ? 'DECLINED' : quote.status,

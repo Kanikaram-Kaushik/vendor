@@ -169,32 +169,37 @@ function ReviewDistributeDetail({ id }: { id: string }) {
         })
       }
 
-      // 1. TOP HEADER (Brand / Showroom Info)
+      // 1. TOP HEADER
+      // Left side (x = 15): DesignBHK Branding & Address (Replacing Logo)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(16)
       doc.setTextColor(17, 17, 17)
-      doc.text('DesignBHK', 120, 20)
+      doc.text('DesignBHK', 15, 20)
 
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
       doc.setTextColor(60, 60, 60)
-      doc.text('Experience Centre Showroom', 120, 26)
-      doc.text('Beside Kotak Mahindra Bank, Habsiguda', 120, 31)
-      doc.text('Habsiguda-Nacharam Road,', 120, 36)
-      doc.text('Hyderabad, Telangana', 120, 41)
-      doc.text('Contact No : +91 70321 70323', 120, 46)
-      doc.text('Email Id : madhavan@designbhk.com', 120, 51)
+      doc.text('Experience Centre Showroom', 15, 26)
+      doc.text('Beside Kotak Mahindra Bank, Habsiguda', 15, 31)
+      doc.text('Habsiguda-Nacharam Road,', 15, 36)
+      doc.text('Hyderabad, Telangana', 15, 41)
+      doc.text('Contact No : +91 70321 70323', 15, 46)
+      doc.text('Email Id : madhavan@designbhk.com', 15, 51)
 
-      // Try embedding Logo on the left
-      try {
-        const logoImgData = await loadImageDataUrl('/icon.png')
-        doc.addImage(logoImgData, 'PNG', 15, 15, 45, 45)
-      } catch (e) {
-        doc.setDrawColor(200, 200, 200)
-        doc.rect(15, 15, 45, 45)
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(12)
-        doc.text('DesignBHK', 22, 40)
+      // Right side (x = 120): Designer / Brand details
+      let rightY = 20
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(14)
+      doc.setTextColor(17, 17, 17)
+      doc.text(submission.designerName || 'Designer Details', 120, rightY)
+      rightY += 6
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(60, 60, 60)
+      if (submission.designerEmail) {
+        doc.text(`Email Id : ${submission.designerEmail}`, 120, rightY)
+        rightY += 4.5
       }
 
       // 2. PREPARED FOR & METADATA SECTION
